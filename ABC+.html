@@ -1,0 +1,3490 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClashArena — Battle Builder (Kişisel Sürüm)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================================================
+     * 1. TEMA VE TASARIM DEĞİŞKENLERİ (Güncellemesi Kolay CSS Değişkenleri)
+     * ========================================================================= */
+    :root {
+      --bg-app: #0d0f14;
+      --bg-sidebar: #12151e;
+      --bg-panel: #181c28;
+      --bg-input: #0e1118;
+      --border-color: #252b3b;
+      --border-focus: #3b82f6;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-red: #f43f5e;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-neon: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Üst Bilgi ve Kontrol Çubuğu */
+    .top-bar {
+      height: 54px;
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #f43f5e, #a855f7, #38bdf8);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .perf-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--accent-green);
+      padding: 5px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rec-indicator {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fda4af;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 6px;
+    }
+
+    .rec-indicator.active {
+      display: flex;
+    }
+
+    .rec-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f43f5e;
+      animation: pulseRec 1s infinite;
+    }
+
+    @keyframes pulseRec {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.85); }
+    }
+
+    /* Ana Çalışma Alanı */
+    .workspace {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Sol Ayarlar Paneli */
+    .sidebar {
+      width: 420px;
+      max-width: 100%;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+      padding: 16px 16px 40px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 7px;
+    }
+    .sidebar::-webkit-scrollbar-track {
+      background: var(--bg-sidebar);
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: #2c3448;
+      border-radius: 4px;
+    }
+
+    /* Kart ve Bölüm Stilleri */
+    .section-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .section-card.neon-card {
+      border-color: rgba(168, 85, 247, 0.45);
+      background: linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(24, 28, 40, 0.95) 100%);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .fighter-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 7px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .label-row .val-badge {
+      color: var(--text-main);
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--border-focus);
+    }
+
+    .hp-bars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+      gap: 7px;
+    }
+
+    .hp-bars-grid input[type="number"] {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      padding: 7px 6px;
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 34px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 3px;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    input[type="file"] {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      max-width: 100%;
+    }
+
+    input[type="file"]::file-selector-button {
+      background: #23293a;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 8px;
+      transition: background 0.15s;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #2e364d;
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px 10px;
+      margin-top: 2px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Butonlar */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-neon {
+      background: linear-gradient(135deg, #9333ea, #ec4899);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.35);
+    }
+    .btn-neon:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-success {
+      background: #059669;
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #047857;
+    }
+
+    .btn-danger {
+      background: #e11d48;
+      color: #fff;
+    }
+    .btn-danger:hover {
+      background: #be123c;
+    }
+
+    .btn-secondary {
+      background: #1e2434;
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover {
+      background: #283046;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 5px;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Sağ Önizleme ve Simülasyon Alanı */
+    .stage-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      overflow: auto;
+      position: relative;
+      background: radial-gradient(circle at center, #161924 0%, #0b0d12 100%);
+    }
+
+    .canvas-shell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      max-height: 100%;
+      max-width: 100%;
+    }
+
+    #battleCanvas {
+      max-height: calc(100vh - 96px);
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.65);
+      cursor: pointer;
+      display: block;
+    }
+
+    /* Hazır Şablon Hapları */
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-pill {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .preset-pill:hover {
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .preset-pill.neon-pill {
+      border-color: rgba(236, 72, 153, 0.5);
+      color: #f472b6;
+      background: rgba(236, 72, 153, 0.08);
+    }
+    .preset-pill.neon-pill:hover {
+      background: rgba(236, 72, 153, 0.18);
+      color: #fff;
+    }
+
+    /* Mobil Uyumluluk */
+    @media (max-width: 960px) {
+      body {
+        height: auto;
+        overflow: auto;
+      }
+      .workspace {
+        flex-direction: column-reverse;
+        overflow: visible;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+      }
+      #battleCanvas {
+        max-height: 75vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ÜST KONTROL ÇUBUĞU -->
+  <header class="top-bar">
+    <div class="brand">
+      <span>KoalaPhysics</span>
+      <span class="brand-badge">Neon & Pro Studio</span>
+    </div>
+
+    <div class="top-actions">
+      <div id="recIndicator" class="rec-indicator">
+        <span class="rec-dot"></span>
+        <span id="recTimerText">REC 00:00</span>
+      </div>
+
+      <div class="perf-pill" title="Gerçek Zamanlı Fizik ve Kare Hızı">
+        <span id="fpsCounter">60 FPS</span>
+      </div>
+
+      <button id="btnQuickNeon" class="btn btn-neon" type="button" title="Tek tıkla Neon Cyberpunk modunu aç/kapat">
+        ✨ NEON MODU
+      </button>
+      <button id="btnStartStop" class="btn btn-primary" type="button">
+        ▶ Başlat (Space)
+      </button>
+      <button id="btnReset" class="btn btn-secondary" type="button">
+        ↺ Sıfırla (R)
+      </button>
+      <button id="btnRecordToggle" class="btn btn-danger" type="button">
+        ⏺ Kayıt & Başlat
+      </button>
+      <button id="btnDownloadVideo" class="btn btn-success" type="button" disabled>
+        ⬇ Videoyu İndir
+      </button>
+    </div>
+  </header>
+
+  <!-- ANA ÇALIŞMA ALANI -->
+  <main class="workspace">
+    <!-- SOL AYARLAR PANELİ -->
+    <aside class="sidebar">
+
+      <!-- HIZLI MOD ŞABLONLARI -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>⚡ Hızlı Savaş Şablonları (Modes)</span>
+          <button id="btnSwapFighters" class="btn btn-secondary btn-sm" type="button" title="Dövüşçü 1 ve 2'yi Yer Değiştir">⇅ Değiştir</button>
+        </div>
+        <div class="preset-pills">
+          <button class="preset-pill neon-pill" data-preset="neon_cyber" type="button">⚡ NEON CYBERPUNK</button>
+          <button class="preset-pill neon-pill" data-preset="synthwave" type="button">🌆 Synthwave Overdrive</button>
+          <button class="preset-pill" data-preset="classic" type="button">1v1 Klasik (Blaze vs Frost)</button>
+          <button class="preset-pill" data-preset="fibonacci" type="button">Fibonacci Düellosu</button>
+          <button class="preset-pill" data-preset="doubling" type="button">×2 Katlanan Kaos</button>
+          <button class="preset-pill" data-preset="underdog" type="button">Underdog (Dev vs Cüce)</button>
+          <button class="preset-pill" data-preset="boss" type="button">Boss Fight (100K HP)</button>
+          <button class="preset-pill" data-preset="roulette" type="button">Damage Roulette</button>
+        </div>
+      </section>
+
+      <!-- NEON VE İZLEYİCİ HEYECAN PAKETİ (YENİ!) -->
+      <section class="section-card neon-card">
+        <div class="section-header">
+          <span>🔥 Neon & İzleyici Heyecan Paketi</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <div class="label-row"><span>Görsel Tema (Theme)</span></div>
+            <select id="themeSelect">
+              <option value="neon_cyber" selected>⚡ Neon Cyberpunk (Karanlık & Glow)</option>
+              <option value="synthwave">🌆 Synthwave Sunset (Mor & Altın)</option>
+              <option value="matrix">🟢 Matrix Cyber Grid (Yeşil & Siyah)</option>
+              <option value="classic">🏛️ Klasik ClashBalls (Orijinal Krem/Gri)</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <div class="label-row">
+              <span>Neon Parlaklığı (Glow)</span>
+              <span id="glowIntensityVal" class="val-badge">18px</span>
+            </div>
+            <input id="glowIntensityRange" type="range" min="0" max="36" step="2" value="18" />
+          </div>
+        </div>
+
+        <div class="checkbox-grid">
+          <label class="checkbox-row">
+            <input id="fxCometTrail" type="checkbox" checked />
+            <span>☄️ Kuyruklu Yıldız İzi (Trail)</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="fxShockwave" type="checkbox" checked />
+            <span>💥 Neon Şok Dalgası & Kıvılcım</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="fxScreenShake" type="checkbox" checked />
+            <span>📳 Bar Kırılınca Ekran Sarsıntısı</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="fxPowerOrbs" type="checkbox" checked />
+            <span>🔮 Arena İçi Sürpriz Neon Küreler</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="fxTugOfWar" type="checkbox" checked />
+            <span>⚔️ Canlı Üstünlük Çubuğu (%)</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="fxOverdrive" type="checkbox" checked />
+            <span>🔥 Son Barda Öfke (Overdrive)</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="fxCritSystem" type="checkbox" checked />
+            <span>⚡ Kritik Vuruş (%18 şansla 2x)</span>
+          </label>
+          <label class="checkbox-row">
+            <input id="fxSlowMoFinish" type="checkbox" checked />
+            <span>🎬 Son Vuruşta Sinematik Slow-Mo</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ARKA PLAN MÜZİĞİ (AMBIENT BACKGROUND SOUND) -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>🎵 Arka Plan Atmosfer Müziği (BGM)</span>
+          <button id="btnBgmPreview" class="btn btn-secondary btn-sm" type="button">▶ Dinle / Durdur</button>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <div class="label-row"><span>Müzik Stili</span></div>
+            <select id="bgmStyleSelect">
+              <option value="cyber_chill" selected>🌌 Cyber Chillwave Pad (Hafif & Uyumlu)</option>
+              <option value="synth_arp">🌆 Synthwave Soft Arp (Ritimli Neon)</option>
+              <option value="deep_focus">🪐 Deep Space Drone (Derin Atmosfer)</option>
+              <option value="retro_lofi">🕹️ 8-Bit Lo-Fi Groove (Yumuşak Arcade)</option>
+              <option value="off">🔇 Kapalı (Müzik Yok)</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <div class="label-row">
+              <span>Müzik Ses Seviyesi</span>
+              <span id="bgmVolVal" class="val-badge">35%</span>
+            </div>
+            <input id="bgmVolRange" type="range" min="0" max="100" step="5" value="35" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>Özel Arka Plan Müziği Dosyası (İsteğe Bağlı MP3/WAV)</span>
+            <button id="btnClearBgmFile" class="btn btn-secondary btn-sm" type="button">Sıfırla</button>
+          </div>
+          <input id="bgmFileInput" type="file" accept="audio/*" />
+          <span id="bgmFileStatus" class="hint-text">Varsayılan sentezlenmiş hafif atmosfer müziği aktif</span>
+        </div>
+      </section>
+
+      <!-- VİDEO KAYIT VE ARENA GENEL AYARLARI -->
+      <section class="section-card">
+        <div class="section-header">
+          <span>🎬 Video Kaydı & Fizik Ayarları</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <div class="label-row"><span>Arena Modu</span></div>
+            <select id="arenaLayoutSelect">
+              <option value="split" selected>İkili Ayrı Kutu (Orijinal)</option>
+              <option value="shared">Tek Ortak Arena (Çarpışmalı)</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Kayıt Çözünürlüğü</span></div>
+            <select id="exportScaleSelect">
+              <option value="2" selected>1080×1920 (Full HD 60fps)</option>
+              <option value="1">600×1020 (Hızlı HD 60fps)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <div class="label-row">
+              <span>Simülasyon Hızı</span>
+              <span id="simSpeedVal" class="val-badge">1.0x</span>
+            </div>
+            <input id="simSpeedRange" type="range" min="0.5" max="3" step="0.1" value="1.0" />
+          </div>
+          <div class="field-group">
+            <div class="label-row">
+              <span>Yerçekimi (Gravity)</span>
+              <span id="gravityVal" class="val-badge">0.00</span>
+            </div>
+            <input id="gravityRange" type="range" min="0" max="0.5" step="0.02" value="0" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <div class="label-row"><span>Can Barı Sayısı (Stage)</span></div>
+            <select id="barCountSelect">
+              <option value="1">1 Bar</option>
+              <option value="2">2 Bar</option>
+              <option value="3" selected>3 Bar (Orijinal)</option>
+              <option value="4">4 Bar</option>
+              <option value="5">5 Bar</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Filigran (Watermark)</span></div>
+            <input id="watermarkInput" type="text" value="KoalaPhysics" placeholder="Boş bırakırsanız gizlenir" />
+          </div>
+        </div>
+
+        <label class="checkbox-row">
+          <input id="autoRecordToggle" type="checkbox" />
+          <span>Başlat'a basınca otomatik video kaydına da başla</span>
+        </label>
+
+        <label class="checkbox-row">
+          <input id="showStatsToggle" type="checkbox" checked />
+          <span>Vuruş (Hits), Kombo ve Anlık Hasar sayaçlarını göster</span>
+        </label>
+
+        <label class="checkbox-row">
+          <input id="showFloatTextToggle" type="checkbox" checked />
+          <span>Alt bara vurulduğunda uçan hasar sayılarını (-10) göster</span>
+        </label>
+      </section>
+
+      <!-- FIGHTER 1 AYARLARI -->
+      <section class="section-card" id="f1Card">
+        <div class="section-header">
+          <div>
+            <span id="f1Dot" class="fighter-dot" style="background:#ff2a5f;"></span>
+            <span>Fighter 1</span>
+          </div>
+          <span id="f1TotalHpLabel" class="val-badge">3,000 total</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <div class="label-row"><span>Name</span></div>
+            <input id="f1Name" type="text" value="BLAZE" maxlength="24" />
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Sembol / Emoji</span></div>
+            <input id="f1Symbol" type="text" value="B" maxlength="4" placeholder="Otomatik baş harf" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row"><span>Color</span></div>
+          <input id="f1Color" type="color" value="#ff2a5f" />
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>HP per bar</span>
+            <button id="f1SyncHpBtn" class="btn btn-secondary btn-sm" type="button" title="1. Barı diğer tüm barlara kopyala">Tümünü Eşitle</button>
+          </div>
+          <div id="f1HpBarsContainer" class="hp-bars-grid"></div>
+        </div>
+
+        <div class="field-row-3">
+          <div class="field-group">
+            <div class="label-row"><span>Base Damage</span></div>
+            <input id="f1BaseDmg" type="number" min="1" max="999999" value="10" />
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Ball Size (px)</span></div>
+            <input id="f1Radius" type="number" min="8" max="90" value="18" />
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Speed</span></div>
+            <input id="f1Speed" type="number" min="1" max="30" step="0.5" value="7.5" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row"><span>Damage Scaling / Sequence</span></div>
+          <select id="f1Sequence"></select>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>Custom Ball Image (Logo / Yüz)</span>
+            <button id="f1ClearImg" class="btn btn-secondary btn-sm" type="button">Temizle</button>
+          </div>
+          <input id="f1ImageInput" type="file" accept="image/*" />
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>Hazır Sekme / Vuruş Sesi (Preset Sound)</span>
+            <button id="f1TestSound" class="btn btn-secondary btn-sm" type="button">🔊 Sesi Dene</button>
+          </div>
+          <select id="f1SoundPreset">
+            <option value="default_beep" selected>🎵 Default Synth Beep (Klasik)</option>
+            <option value="laser_zap">⚡ Neon Laser Zap (Cyberpunk)</option>
+            <option value="arcade_coin">🪙 8-Bit Arcade Blip (Retro)</option>
+            <option value="deep_bass">🥁 Deep Sub Thud (Tok Bas)</option>
+            <option value="crystal_chime">💎 Crystal Glass Ping (Kristal)</option>
+            <option value="plasma_pop">🫧 Soft Plasma Pop (Yumuşak Pop)</option>
+            <option value="metallic_clang">⚔️ Metallic Cyber Hit (Metalik)</option>
+            <option value="musical_scale">🎹 Musical Pentatonic (Melodik Nota)</option>
+            <option value="wood_marimba">🪵 Warm Marimba Tap (Ahşap/Marimba)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>Veya Özel Ses Dosyası Yükle (Hit Sound File)</span>
+            <button id="f1ClearSound" class="btn btn-secondary btn-sm" type="button">Sıfırla</button>
+          </div>
+          <input id="f1SoundInput" type="file" accept="audio/*" />
+          <span id="f1SoundStatus" class="hint-text">Hazır ses aktif (Dosya yüklenirse öncelikli olur)</span>
+          <label class="checkbox-row">
+            <input id="f1Mute" type="checkbox" />
+            <span>No sound on hit</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- FIGHTER 2 AYARLARI -->
+      <section class="section-card" id="f2Card">
+        <div class="section-header">
+          <div>
+            <span id="f2Dot" class="fighter-dot" style="background:#00f0ff;"></span>
+            <span>Fighter 2</span>
+          </div>
+          <span id="f2TotalHpLabel" class="val-badge">3,000 total</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <div class="label-row"><span>Name</span></div>
+            <input id="f2Name" type="text" value="FROST" maxlength="24" />
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Sembol / Emoji</span></div>
+            <input id="f2Symbol" type="text" value="F" maxlength="4" placeholder="Otomatik baş harf" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row"><span>Color</span></div>
+          <input id="f2Color" type="color" value="#00f0ff" />
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>HP per bar</span>
+            <button id="f2SyncHpBtn" class="btn btn-secondary btn-sm" type="button" title="1. Barı diğer tüm barlara kopyala">Tümünü Eşitle</button>
+          </div>
+          <div id="f2HpBarsContainer" class="hp-bars-grid"></div>
+        </div>
+
+        <div class="field-row-3">
+          <div class="field-group">
+            <div class="label-row"><span>Base Damage</span></div>
+            <input id="f2BaseDmg" type="number" min="1" max="999999" value="10" />
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Ball Size (px)</span></div>
+            <input id="f2Radius" type="number" min="8" max="90" value="18" />
+          </div>
+          <div class="field-group">
+            <div class="label-row"><span>Speed</span></div>
+            <input id="f2Speed" type="number" min="1" max="30" step="0.5" value="7.5" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row"><span>Damage Scaling / Sequence</span></div>
+          <select id="f2Sequence"></select>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>Custom Ball Image (Logo / Yüz)</span>
+            <button id="f2ClearImg" class="btn btn-secondary btn-sm" type="button">Temizle</button>
+          </div>
+          <input id="f2ImageInput" type="file" accept="image/*" />
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>Hazır Sekme / Vuruş Sesi (Preset Sound)</span>
+            <button id="f2TestSound" class="btn btn-secondary btn-sm" type="button">🔊 Sesi Dene</button>
+          </div>
+          <select id="f2SoundPreset">
+            <option value="default_beep">🎵 Default Synth Beep (Klasik)</option>
+            <option value="laser_zap">⚡ Neon Laser Zap (Cyberpunk)</option>
+            <option value="arcade_coin">🪙 8-Bit Arcade Blip (Retro)</option>
+            <option value="deep_bass">🥁 Deep Sub Thud (Tok Bas)</option>
+            <option value="crystal_chime" selected>💎 Crystal Glass Ping (Kristal)</option>
+            <option value="plasma_pop">🫧 Soft Plasma Pop (Yumuşak Pop)</option>
+            <option value="metallic_clang">⚔️ Metallic Cyber Hit (Metalik)</option>
+            <option value="musical_scale">🎹 Musical Pentatonic (Melodik Nota)</option>
+            <option value="wood_marimba">🪵 Warm Marimba Tap (Ahşap/Marimba)</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <div class="label-row">
+            <span>Veya Özel Ses Dosyası Yükle (Hit Sound File)</span>
+            <button id="f2ClearSound" class="btn btn-secondary btn-sm" type="button">Sıfırla</button>
+          </div>
+          <input id="f2SoundInput" type="file" accept="audio/*" />
+          <span id="f2SoundStatus" class="hint-text">Hazır ses aktif (Dosya yüklenirse öncelikli olur)</span>
+          <label class="checkbox-row">
+            <input id="f2Mute" type="checkbox" />
+            <span>No sound on hit</span>
+          </label>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- SAĞ ARENA SAHNESİ -->
+    <section class="stage-area">
+      <div class="canvas-shell">
+        <canvas id="battleCanvas" width="1200" height="2040"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /**
+     * ============================================================================
+     * KoalaPhysics — MODÜLER TEK DOSYA SİMÜLATÖR MOTORU (NEON & SPECTATOR EDITION)
+     * ============================================================================
+     * Kod Yapısı (Kolay Güncellenebilir Mimari):
+     * 1. THEMES           : Klasik ve Neon Görsel Temalar (Cyberpunk, Synthwave, Matrix).
+     * 2. DAMAGE_SEQUENCES : Tüm matematiksel hasar dizileri.
+     * 3. PRESETS          : Hazır savaş şablonları.
+     * 4. SoundEngine      : Sıfır gecikmeli Web Audio API + Power-up/Bar kırılma sesleri.
+     * 5. VideoRecorder    : Hata korumalı (try/catch) 60FPS sesli video kaydedici.
+     * 6. ObjectPools      : Sıfır-GC Parçacık, Şok Dalgası (Shockwave) ve Uçan Yazı havuzu.
+     * 7. ArenaEngine      : Fizik, Neon Trail, Sürpriz Küreler, Üstünlük Çubuğu ve Çizim.
+     * ============================================================================
+     */
+
+    // ============================================================================
+    // 1. GÖRSEL TEMALAR (Yeni tema eklemek için buraya nesne ekleyebilirsiniz)
+    // ============================================================================
+    const THEMES = {
+      classic: {
+        isNeon: false,
+        outerFrame: '#e7ddc6',
+        innerBoard: '#565249',
+        boxBg: '#6e6c69',
+        emptyBarBg: '#252629',
+        borderStroke: '#090a0c',
+        gridColor: null,
+        footerText: '#6b665e'
+      },
+      neon_cyber: {
+        isNeon: true,
+        outerFrame: '#05070e',
+        innerBoard: '#0a0e1a',
+        boxBg: '#070a12',
+        emptyBarBg: '#111728',
+        borderStroke: '#1e293b',
+        gridColor: 'rgba(56, 189, 248, 0.08)',
+        footerText: '#64748b'
+      },
+      synthwave: {
+        isNeon: true,
+        outerFrame: '#120424',
+        innerBoard: '#1d083a',
+        boxBg: '#110424',
+        emptyBarBg: '#271047',
+        borderStroke: '#ec4899',
+        gridColor: 'rgba(236, 72, 153, 0.10)',
+        footerText: '#cbd5e1'
+      },
+      matrix: {
+        isNeon: true,
+        outerFrame: '#020b05',
+        innerBoard: '#05160b',
+        boxBg: '#030d06',
+        emptyBarBg: '#0a2412',
+        borderStroke: '#10b981',
+        gridColor: 'rgba(16, 185, 129, 0.10)',
+        footerText: '#34d399'
+      }
+    };
+
+    // ============================================================================
+    // 2. HASAR DİZİLERİ VE FORMÜLLERİ
+    // ============================================================================
+    const FIB_CACHE = [1, 1];
+    function getFibonacci(n) {
+      for (let i = FIB_CACHE.length; i <= n; i++) {
+        FIB_CACHE[i] = FIB_CACHE[i - 1] + FIB_CACHE[i - 2];
+      }
+      return FIB_CACHE[n];
+    }
+
+    const LUCAS_CACHE = [1, 2, 3];
+    function getLucas(n) {
+      for (let i = LUCAS_CACHE.length; i <= n; i++) {
+        LUCAS_CACHE[i] = LUCAS_CACHE[i - 1] + LUCAS_CACHE[i - 2];
+      }
+      return LUCAS_CACHE[n];
+    }
+
+    const TRIB_CACHE = [1, 1, 2];
+    function getTribonacci(n) {
+      for (let i = TRIB_CACHE.length; i <= n; i++) {
+        TRIB_CACHE[i] = TRIB_CACHE[i - 1] + TRIB_CACHE[i - 2] + TRIB_CACHE[i - 3];
+      }
+      return TRIB_CACHE[n];
+    }
+
+    const FACT_CACHE = [1, 2];
+    function getFactorial(n) {
+      for (let i = FACT_CACHE.length; i <= n; i++) {
+        FACT_CACHE[i] = FACT_CACHE[i - 1] * (i + 1);
+      }
+      return FACT_CACHE[n];
+    }
+
+    const CATALAN_CACHE = [1, 1, 2, 5, 14, 42];
+    function getCatalan(n) {
+      for (let i = CATALAN_CACHE.length; i <= n; i++) {
+        let sum = 0;
+        for (let j = 0; j < i; j++) {
+          sum += CATALAN_CACHE[j] * CATALAN_CACHE[i - 1 - j];
+        }
+        CATALAN_CACHE[i] = sum;
+      }
+      return CATALAN_CACHE[n];
+    }
+
+    const PRIMES_CACHE = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29];
+    function getPrime(n) {
+      let candidate = PRIMES_CACHE[PRIMES_CACHE.length - 1] + 2;
+      while (PRIMES_CACHE.length <= n) {
+        let isPrime = true;
+        const limit = Math.sqrt(candidate);
+        for (let i = 0; i < PRIMES_CACHE.length && PRIMES_CACHE[i] <= limit; i++) {
+          if (candidate % PRIMES_CACHE[i] === 0) {
+            isPrime = false;
+            break;
+          }
+        }
+        if (isPrime) PRIMES_CACHE.push(candidate);
+        candidate += 2;
+      }
+      return PRIMES_CACHE[n];
+    }
+
+    const DAMAGE_SEQUENCES = [
+      {
+        group: 'Sequences',
+        id: 'seq_fibonacci',
+        label: 'Fibonacci (1, 1, 2, 3, 5, 8, 13, 21, ...)',
+        calc: (hitIndex) => getFibonacci(hitIndex)
+      },
+      {
+        group: 'Sequences',
+        id: 'seq_factorial',
+        label: 'Factorial (1, 2, 6, 24, 120, 720, ...)',
+        calc: (hitIndex) => getFactorial(hitIndex)
+      },
+      {
+        group: 'Sequences',
+        id: 'seq_squares',
+        label: 'Squares (1, 4, 9, 16, 25, 36, ...)',
+        calc: (hitIndex) => (hitIndex + 1) * (hitIndex + 1)
+      },
+      {
+        group: 'Sequences',
+        id: 'seq_cubes',
+        label: 'Cubes (1, 8, 27, 64, 125, 216, ...)',
+        calc: (hitIndex) => Math.pow(hitIndex + 1, 3)
+      },
+      {
+        group: 'Sequences',
+        id: 'seq_catalan',
+        label: 'Catalan numbers (1, 1, 2, 5, 14, 42, ...)',
+        calc: (hitIndex) => getCatalan(hitIndex)
+      },
+      {
+        group: 'Sequences',
+        id: 'seq_lucas',
+        label: 'Lucas numbers (1, 2, 3, 4, 7, 11, ...)',
+        calc: (hitIndex) => getLucas(hitIndex)
+      },
+      {
+        group: 'Sequences',
+        id: 'seq_tribonacci',
+        label: 'Tribonacci (1, 1, 2, 4, 7, 13, 24, ...)',
+        calc: (hitIndex) => getTribonacci(hitIndex)
+      },
+      {
+        group: 'Sequences',
+        id: 'seq_primes',
+        label: 'Prime numbers (2, 3, 5, 7, 11, 13, 17, ...)',
+        calc: (hitIndex) => getPrime(hitIndex)
+      },
+      {
+        group: 'Multiplicative',
+        id: 'mult_x2',
+        label: 'Doubling (×2 per hit)',
+        calc: (hitIndex, base) => Math.round(base * Math.pow(2, hitIndex))
+      },
+      {
+        group: 'Multiplicative',
+        id: 'mult_x3',
+        label: 'Tripling (×3 per hit)',
+        calc: (hitIndex, base) => Math.round(base * Math.pow(3, hitIndex))
+      },
+      {
+        group: 'Multiplicative',
+        id: 'mult_x1_8',
+        label: '×1.8 per hit',
+        calc: (hitIndex, base) => Math.round(base * Math.pow(1.8, hitIndex))
+      },
+      {
+        group: 'Multiplicative',
+        id: 'mult_p20',
+        label: '+20% per hit',
+        calc: (hitIndex, base) => Math.round(base * Math.pow(1.2, hitIndex))
+      },
+      {
+        group: 'Multiplicative',
+        id: 'mult_p10',
+        label: '+10% per hit',
+        calc: (hitIndex, base) => Math.round(base * Math.pow(1.1, hitIndex))
+      },
+      {
+        group: 'Additive / linear',
+        id: 'add_none',
+        label: 'None — same damage every hit',
+        calc: (hitIndex, base) => base
+      },
+      {
+        group: 'Additive / linear',
+        id: 'add_1',
+        label: '+1 per hit',
+        calc: (hitIndex, base) => base + hitIndex * 1
+      },
+      {
+        group: 'Additive / linear',
+        id: 'add_2',
+        label: '+2 per hit',
+        calc: (hitIndex, base) => base + hitIndex * 2
+      },
+      {
+        group: 'Additive / linear',
+        id: 'add_10',
+        label: '+10 per hit',
+        calc: (hitIndex, base) => base + hitIndex * 10
+      },
+      {
+        group: 'Additive / linear',
+        id: 'add_100',
+        label: '+100 per hit',
+        calc: (hitIndex, base) => base + hitIndex * 100
+      },
+      {
+        group: 'Additive / linear',
+        id: 'add_1000',
+        label: '+1000 per hit',
+        calc: (hitIndex, base) => base + hitIndex * 1000
+      },
+      {
+        group: 'Additive / linear',
+        id: 'add_triangular',
+        label: 'Triangular — each step grows one more than the last (1, 3, 6, 10, 15, ...)',
+        calc: (hitIndex, base) => {
+          const tri = ((hitIndex + 1) * (hitIndex + 2)) / 2;
+          return base <= 1 ? tri : base + tri;
+        }
+      },
+      {
+        group: 'Chaos / Roulette',
+        id: 'rng_roulette',
+        label: 'Damage Roulette (1x ile 5x Base Damage arası rastgele)',
+        calc: (hitIndex, base) => Math.max(1, Math.round(base * (0.5 + Math.random() * 4.5)))
+      }
+    ];
+
+    const SEQUENCE_MAP = new Map(DAMAGE_SEQUENCES.map(s => [s.id, s]));
+
+    // ============================================================================
+    // 3. HAZIR SAVAŞ ŞABLONLARI (PRESETS)
+    // ============================================================================
+    const PRESETS = {
+      neon_cyber: {
+        theme: 'neon_cyber',
+        barCount: 3,
+        f1: { name: 'CYBER', symbol: '⚡', color: '#ff2a5f', hpBars: [1500, 1500, 1500], baseDmg: 15, seq: 'add_10', radius: 18, speed: 8 },
+        f2: { name: 'NEON', symbol: '💠', color: '#00f0ff', hpBars: [1500, 1500, 1500], baseDmg: 15, seq: 'add_10', radius: 18, speed: 8 }
+      },
+      synthwave: {
+        theme: 'synthwave',
+        barCount: 4,
+        f1: { name: 'OUTRUN', symbol: '☀️', color: '#f59e0b', hpBars: [2000, 2000, 2000, 2000], baseDmg: 20, seq: 'mult_p20', radius: 19, speed: 8.5 },
+        f2: { name: 'VAPOR', symbol: '🔮', color: '#ec4899', hpBars: [2000, 2000, 2000, 2000], baseDmg: 20, seq: 'mult_p20', radius: 19, speed: 8.5 }
+      },
+      classic: {
+        theme: 'classic',
+        barCount: 3,
+        f1: { name: 'BLAZE', symbol: 'B', color: '#7a2230', hpBars: [1000, 1000, 1000], baseDmg: 10, seq: 'add_10', radius: 18, speed: 7 },
+        f2: { name: 'FROST', symbol: 'F', color: '#156577', hpBars: [1000, 1000, 1000], baseDmg: 10, seq: 'add_10', radius: 18, speed: 7 }
+      },
+      fibonacci: {
+        theme: 'neon_cyber',
+        barCount: 3,
+        f1: { name: 'GOLDEN', symbol: 'φ', color: '#facc15', hpBars: [2500, 2500, 2500], baseDmg: 1, seq: 'seq_fibonacci', radius: 18, speed: 8 },
+        f2: { name: 'SPIRAL', symbol: '🌀', color: '#a855f7', hpBars: [2500, 2500, 2500], baseDmg: 1, seq: 'seq_fibonacci', radius: 18, speed: 8 }
+      },
+      doubling: {
+        theme: 'neon_cyber',
+        barCount: 4,
+        f1: { name: 'NOVA', symbol: '💥', color: '#fb7185', hpBars: [25000, 25000, 25000, 25000], baseDmg: 2, seq: 'mult_x2', radius: 17, speed: 8.5 },
+        f2: { name: 'VOID', symbol: '🌌', color: '#38bdf8', hpBars: [25000, 25000, 25000, 25000], baseDmg: 2, seq: 'mult_x2', radius: 17, speed: 8.5 }
+      },
+      underdog: {
+        theme: 'neon_cyber',
+        barCount: 3,
+        f1: { name: 'TITAN', symbol: 'T', color: '#f43f5e', hpBars: [3000, 3000, 3000], baseDmg: 30, seq: 'add_none', radius: 30, speed: 5.5 },
+        f2: { name: 'SPARK', symbol: '⚡', color: '#38bdf8', hpBars: [1000, 1000, 1000], baseDmg: 10, seq: 'add_10', radius: 13, speed: 11 }
+      },
+      boss: {
+        theme: 'synthwave',
+        barCount: 5,
+        f1: { name: 'LEVIATHAN', symbol: '👹', color: '#c084fc', hpBars: [20000, 20000, 20000, 20000, 20000], baseDmg: 50, seq: 'add_100', radius: 34, speed: 5 },
+        f2: { name: 'SLAYER', symbol: '⚔️', color: '#34d399', hpBars: [5000, 5000, 5000, 5000, 5000], baseDmg: 8, seq: 'mult_x1_8', radius: 16, speed: 10.5 }
+      },
+      roulette: {
+        theme: 'neon_cyber',
+        barCount: 3,
+        f1: { name: 'JOKER', symbol: '🎲', color: '#f472b6', hpBars: [1500, 1500, 1500], baseDmg: 45, seq: 'rng_roulette', radius: 19, speed: 8 },
+        f2: { name: 'DEALER', symbol: '♠️', color: '#60a5fa', hpBars: [1500, 1500, 1500], baseDmg: 45, seq: 'rng_roulette', radius: 19, speed: 8 }
+      }
+    };
+
+    // ============================================================================
+    // 4. SES MOTORU (Web Audio API — Vuruş, Bar Kırılma, Power-Up ve Zafer Sesleri)
+    // ============================================================================
+    const PENTATONIC_FREQS = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.destNode = null;
+        this.customBuffers = { 1: null, 2: null };
+        this.lastPlayTime = { 1: 0, 2: 0 };
+
+        // Arka Plan Müziği (BGM) Durumu
+        this.bgmStyle = 'cyber_chill';
+        this.bgmVolume = 0.35;
+        this.bgmPlaying = false;
+        this.bgmInterval = null;
+        this.bgmStep = 0;
+        this.customBgmBuffer = null;
+        this.customBgmSource = null;
+        this.bgmMasterGain = null;
+      }
+
+      init() {
+        try {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              this.ctx = new AudioCtx();
+              if (this.ctx.createMediaStreamDestination) {
+                this.destNode = this.ctx.createMediaStreamDestination();
+              }
+              this.bgmMasterGain = this.ctx.createGain();
+              this.bgmMasterGain.gain.setValueAtTime(this.bgmVolume * 0.22, this.ctx.currentTime);
+              this.bgmMasterGain.connect(this.ctx.destination);
+              if (this.destNode) this.bgmMasterGain.connect(this.destNode);
+            }
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+          }
+        } catch (e) {}
+      }
+
+      connectOut(node) {
+        if (!this.ctx) return;
+        node.connect(this.ctx.destination);
+        if (this.destNode) node.connect(this.destNode);
+      }
+
+      setBgmVolume(volRatio) {
+        this.bgmVolume = Math.max(0, Math.min(1, volRatio));
+        if (this.ctx && this.bgmMasterGain) {
+          this.bgmMasterGain.gain.setTargetAtTime(this.bgmVolume * 0.22, this.ctx.currentTime, 0.05);
+        }
+      }
+
+      setBgmStyle(style) {
+        this.bgmStyle = style;
+        if (this.bgmPlaying) {
+          this.stopBgm();
+          if (style !== 'off') this.startBgm();
+        }
+      }
+
+      async loadCustomBgm(file) {
+        this.init();
+        if (!this.ctx) return;
+        const arrayBuf = await file.arrayBuffer();
+        this.customBgmBuffer = await this.ctx.decodeAudioData(arrayBuf);
+        if (this.bgmPlaying) {
+          this.stopBgm();
+          this.startBgm();
+        }
+      }
+
+      clearCustomBgm() {
+        this.customBgmBuffer = null;
+        if (this.bgmPlaying) {
+          this.stopBgm();
+          this.startBgm();
+        }
+      }
+
+      startBgm() {
+        if (this.bgmStyle === 'off') return;
+        this.init();
+        if (!this.ctx) return;
+        this.stopBgm();
+        this.bgmPlaying = true;
+        this.bgmStep = 0;
+
+        // Eğer kullanıcı özel bir arka plan müzik dosyası yüklediyse onu döngüde (loop) çal
+        if (this.customBgmBuffer) {
+          const src = this.ctx.createBufferSource();
+          src.buffer = this.customBgmBuffer;
+          src.loop = true;
+          src.connect(this.bgmMasterGain);
+          src.start(0);
+          this.customBgmSource = src;
+          return;
+        }
+
+        // Hafif, kulağı yormayan ve vuruş sesleriyle uyumlu prosedürel atmosfer müziği
+        const playStep = () => {
+          if (!this.bgmPlaying || !this.ctx || this.bgmStyle === 'off') return;
+          const now = this.ctx.currentTime;
+          const step = this.bgmStep++;
+
+          if (this.bgmStyle === 'cyber_chill') {
+            // Yumuşak Am9 -> Fmaj7 -> Cmaj7 -> G6 akor pedleri ve hafif arpej damlaları
+            const chords = [
+              [110.00, 164.81, 196.00, 246.94],
+              [87.31, 130.81, 164.81, 220.00],
+              [130.81, 164.81, 196.00, 246.94],
+              [98.00, 146.83, 196.00, 246.94]
+            ];
+            const chord = chords[Math.floor(step / 8) % chords.length];
+
+            // Her 8 adımda bir yumuşak ambient pad akoru
+            if (step % 8 === 0) {
+              chord.forEach((freq) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.14, now + 0.8);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 2.9);
+                osc.connect(gain);
+                gain.connect(this.bgmMasterGain);
+                osc.start(now);
+                osc.stop(now + 3.0);
+              });
+            }
+
+            // Hafif kristal arpej dokunuşu
+            const arpFreq = chord[step % chord.length] * 2;
+            const arpOsc = this.ctx.createOscillator();
+            const arpGain = this.ctx.createGain();
+            arpOsc.type = 'triangle';
+            arpOsc.frequency.setValueAtTime(arpFreq, now);
+            arpGain.gain.setValueAtTime(0.06, now);
+            arpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+            arpOsc.connect(arpGain);
+            arpGain.connect(this.bgmMasterGain);
+            arpOsc.start(now);
+            arpOsc.stop(now + 0.34);
+
+          } else if (this.bgmStyle === 'synth_arp') {
+            // Synthwave 16'lık yumuşak bas ve neon arpej
+            const bassNotes = [110.0, 110.0, 87.31, 98.0];
+            const arpNotes = [220.0, 261.63, 329.63, 392.0, 329.63, 261.63];
+            const bassFreq = bassNotes[Math.floor(step / 4) % bassNotes.length];
+            const arpFreq = arpNotes[step % arpNotes.length];
+
+            const osc = this.ctx.createOscillator();
+            const filter = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(step % 2 === 0 ? bassFreq : arpFreq, now);
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(680, now);
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.bgmMasterGain);
+            osc.start(now);
+            osc.stop(now + 0.25);
+
+          } else if (this.bgmStyle === 'deep_focus') {
+            // Derin uzay atmosferi (Uzun nefes alan drone)
+            if (step % 6 === 0) {
+              const root = step % 12 === 0 ? 65.41 : 73.42;
+              [root, root * 1.5, root * 2].forEach((f, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = idx === 0 ? 'sine' : 'triangle';
+                osc.frequency.setValueAtTime(f, now);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.16 / (idx + 1), now + 0.9);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 2.4);
+                osc.connect(gain);
+                gain.connect(this.bgmMasterGain);
+                osc.start(now);
+                osc.stop(now + 2.5);
+              });
+            }
+
+          } else if (this.bgmStyle === 'retro_lofi') {
+            // Yumuşak 8-bit Lo-Fi melodi
+            const scale = [261.63, 329.63, 392.00, 493.88, 523.25, 392.00];
+            const freq = scale[step % scale.length];
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+            osc.connect(gain);
+            gain.connect(this.bgmMasterGain);
+            osc.start(now);
+            osc.stop(now + 0.3);
+          }
+        };
+
+        playStep();
+        this.bgmInterval = setInterval(playStep, 340);
+      }
+
+      stopBgm() {
+        this.bgmPlaying = false;
+        if (this.bgmInterval) {
+          clearInterval(this.bgmInterval);
+          this.bgmInterval = null;
+        }
+        if (this.customBgmSource) {
+          try { this.customBgmSource.stop(); } catch (e) {}
+          this.customBgmSource = null;
+        }
+      }
+
+      async loadCustomAudio(fighterIdx, file) {
+        this.init();
+        if (!this.ctx) return;
+        const arrayBuf = await file.arrayBuffer();
+        const audioBuf = await this.ctx.decodeAudioData(arrayBuf);
+        this.customBuffers[fighterIdx] = audioBuf;
+      }
+
+      clearCustomAudio(fighterIdx) {
+        this.customBuffers[fighterIdx] = null;
+      }
+
+      playHit(fighterIdx, mute, hitCount, isCrit = false, presetId = 'default_beep', forcePreview = false) {
+        if (mute && !forcePreview) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        if (!forcePreview && now - this.lastPlayTime[fighterIdx] < 0.022) return;
+        this.lastPlayTime[fighterIdx] = now;
+
+        const customBuf = this.customBuffers[fighterIdx];
+        if (customBuf) {
+          const src = this.ctx.createBufferSource();
+          const gain = this.ctx.createGain();
+          src.buffer = customBuf;
+          gain.gain.setValueAtTime(0.65, now);
+          src.connect(gain);
+          this.connectOut(gain);
+          src.start(now);
+          return;
+        }
+
+        const critBoost = isCrit ? 1.25 : 1.0;
+
+        switch (presetId) {
+          case 'laser_zap': {
+            // Cyberpunk Neon Laser Zap
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            const startF = (fighterIdx === 1 ? 880 : 1040) * critBoost;
+            osc.frequency.setValueAtTime(startF, now);
+            osc.frequency.exponentialRampToValueAtTime(110, now + 0.095);
+            gain.gain.setValueAtTime(0.24, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+            osc.connect(gain);
+            this.connectOut(gain);
+            osc.start(now);
+            osc.stop(now + 0.1);
+            break;
+          }
+
+          case 'arcade_coin': {
+            // 8-Bit Çift Notalı Arcade Blip
+            const fA = (fighterIdx === 1 ? 523.25 : 587.33) * critBoost;
+            const fB = fA * 1.5;
+            [fA, fB].forEach((freq, idx) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'square';
+              osc.frequency.setValueAtTime(freq, now + idx * 0.035);
+              gain.gain.setValueAtTime(0.16, now + idx * 0.035);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.035 + 0.06);
+              osc.connect(gain);
+              this.connectOut(gain);
+              osc.start(now + idx * 0.035);
+              osc.stop(now + idx * 0.035 + 0.065);
+            });
+            break;
+          }
+
+          case 'deep_bass': {
+            // Tok Sinematik Sub-Bass Thud
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            const startF = (fighterIdx === 1 ? 150 : 185) * critBoost;
+            osc.frequency.setValueAtTime(startF, now);
+            osc.frequency.exponentialRampToValueAtTime(36, now + 0.13);
+            gain.gain.setValueAtTime(0.42, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+            osc.connect(gain);
+            this.connectOut(gain);
+            osc.start(now);
+            osc.stop(now + 0.14);
+            break;
+          }
+
+          case 'crystal_chime': {
+            // Parlak Kristal Cam Çınlaması
+            const baseF = (fighterIdx === 1 ? 1174.66 : 1318.51) * critBoost;
+            [baseF, baseF * 1.5].forEach((freq, idx) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now);
+              gain.gain.setValueAtTime(0.18 / (idx + 1), now);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+              osc.connect(gain);
+              this.connectOut(gain);
+              osc.start(now);
+              osc.stop(now + 0.17);
+            });
+            break;
+          }
+
+          case 'plasma_pop': {
+            // Yumuşak Baloncuk / Plazma Pop Sesi
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            const startF = fighterIdx === 1 ? 190 : 240;
+            osc.frequency.setValueAtTime(startF, now);
+            osc.frequency.exponentialRampToValueAtTime(startF * 2.8 * critBoost, now + 0.065);
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+            osc.connect(gain);
+            this.connectOut(gain);
+            osc.start(now);
+            osc.stop(now + 0.075);
+            break;
+          }
+
+          case 'metallic_clang': {
+            // FM Sentezli Metalik Kılıç/Zırh Sekmesi
+            const carrier = this.ctx.createOscillator();
+            const mod = this.ctx.createOscillator();
+            const modGain = this.ctx.createGain();
+            const outGain = this.ctx.createGain();
+
+            carrier.type = 'triangle';
+            mod.type = 'square';
+            const baseF = (fighterIdx === 1 ? 420 : 540) * critBoost;
+            carrier.frequency.setValueAtTime(baseF, now);
+            mod.frequency.setValueAtTime(baseF * 1.414, now);
+            modGain.gain.setValueAtTime(280, now);
+            modGain.gain.exponentialRampToValueAtTime(5, now + 0.11);
+
+            outGain.gain.setValueAtTime(0.24, now);
+            outGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+            mod.connect(modGain);
+            modGain.connect(carrier.frequency);
+            carrier.connect(outGain);
+            this.connectOut(outGain);
+
+            mod.start(now);
+            carrier.start(now);
+            mod.stop(now + 0.13);
+            carrier.stop(now + 0.13);
+            break;
+          }
+
+          case 'musical_scale': {
+            // Her vuruşta Pentatonik gamda yükselen melodik nota
+            const noteFreq = PENTATONIC_FREQS[hitCount % PENTATONIC_FREQS.length] * (fighterIdx === 2 ? 1.122 : 1) * critBoost;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(noteFreq, now);
+            gain.gain.setValueAtTime(0.28, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.connect(gain);
+            this.connectOut(gain);
+            osc.start(now);
+            osc.stop(now + 0.16);
+            break;
+          }
+
+          case 'wood_marimba': {
+            // Sıcak Akustik Marimba / Ahşap Sekme Sesi
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            const baseF = (fighterIdx === 1 ? 293.66 : 392.00) * critBoost;
+            osc.frequency.setValueAtTime(baseF, now);
+            gain.gain.setValueAtTime(0.32, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+            osc.connect(gain);
+            this.connectOut(gain);
+            osc.start(now);
+            osc.stop(now + 0.095);
+            break;
+          }
+
+          case 'default_beep':
+          default: {
+            // Klasik Synth Beep
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const baseFreq = fighterIdx === 1 ? 230 : 310;
+            const pitchBoost = Math.min(280, (hitCount % 25) * 9) + (isCrit ? 140 : 0);
+            osc.type = isCrit ? 'sawtooth' : 'triangle';
+            osc.frequency.setValueAtTime(baseFreq + pitchBoost, now);
+            osc.frequency.exponentialRampToValueAtTime(80, now + 0.085);
+            gain.gain.setValueAtTime(isCrit ? 0.34 : 0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
+            osc.connect(gain);
+            this.connectOut(gain);
+            osc.start(now);
+            osc.stop(now + 0.09);
+            break;
+          }
+        }
+      }
+
+      playBarShatter(mute) {
+        if (mute) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(38, now + 0.22);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        if (this.destNode) gain.connect(this.destNode);
+        osc.start(now);
+        osc.stop(now + 0.24);
+      }
+
+      playOrbPickup(mute) {
+        if (mute) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 783.99].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.045);
+          gain.gain.setValueAtTime(0.2, now + i * 0.045);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.045 + 0.12);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          if (this.destNode) gain.connect(this.destNode);
+          osc.start(now + i * 0.045);
+          osc.stop(now + i * 0.045 + 0.13);
+        });
+      }
+
+      playVictoryFanfare() {
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+          gain.gain.setValueAtTime(0.22, now + idx * 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.28);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          if (this.destNode) gain.connect(this.destNode);
+          osc.start(now + idx * 0.07);
+          osc.stop(now + idx * 0.07 + 0.3);
+        });
+      }
+    }
+
+    // ============================================================================
+    // 5. VİDEO KAYIT MOTORU (Tam Hata Korumalı - Simülasyonu Asla Kilitlemez)
+    // ============================================================================
+    class VideoRecorder {
+      constructor(canvas, soundEngine, onStateChange) {
+        this.canvas = canvas;
+        this.soundEngine = soundEngine;
+        this.onStateChange = onStateChange;
+        this.recorder = null;
+        this.chunks = [];
+        this.lastBlobUrl = null;
+        this.lastExtension = 'webm';
+        this.isRecording = false;
+        this.startTime = 0;
+        this.timerInterval = null;
+      }
+
+      getSupportedMimeType() {
+        if (typeof window.MediaRecorder === 'undefined') return { mime: '', ext: 'webm' };
+        const candidates = [
+          { mime: 'video/mp4;codecs=avc1.42E01E,mp4a.40.2', ext: 'mp4' },
+          { mime: 'video/mp4', ext: 'mp4' },
+          { mime: 'video/webm;codecs=vp9,opus', ext: 'webm' },
+          { mime: 'video/webm;codecs=vp8,opus', ext: 'webm' },
+          { mime: 'video/webm', ext: 'webm' }
+        ];
+        for (const item of candidates) {
+          try {
+            if (MediaRecorder.isTypeSupported(item.mime)) return item;
+          } catch (e) {}
+        }
+        return { mime: '', ext: 'webm' };
+      }
+
+      start() {
+        if (this.isRecording) return;
+        try {
+          if (!this.canvas.captureStream || typeof window.MediaRecorder === 'undefined') {
+            return;
+          }
+          this.soundEngine.init();
+
+          const canvasStream = this.canvas.captureStream(60);
+          const combinedTracks = [...canvasStream.getVideoTracks()];
+
+          if (this.soundEngine.destNode && this.soundEngine.destNode.stream) {
+            const audioTracks = this.soundEngine.destNode.stream.getAudioTracks();
+            if (audioTracks.length > 0) {
+              combinedTracks.push(audioTracks[0]);
+            }
+          }
+
+          const finalStream = new MediaStream(combinedTracks);
+          const { mime, ext } = this.getSupportedMimeType();
+          this.lastExtension = ext;
+          this.chunks = [];
+
+          const options = { videoBitsPerSecond: 14_000_000 };
+          if (mime) options.mimeType = mime;
+
+          try {
+            this.recorder = new MediaRecorder(finalStream, options);
+          } catch (err) {
+            // Ses izi bazı tarayıcılarda codec uyuşmazlığı yaparsa sadece video akışıyla kaydet
+            this.recorder = new MediaRecorder(canvasStream);
+          }
+
+          this.recorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              this.chunks.push(e.data);
+            }
+          };
+
+          this.recorder.onstop = () => {
+            const blob = new Blob(this.chunks, { type: mime || 'video/webm' });
+            if (this.lastBlobUrl) URL.revokeObjectURL(this.lastBlobUrl);
+            this.lastBlobUrl = URL.createObjectURL(blob);
+            this.isRecording = false;
+            clearInterval(this.timerInterval);
+            this.onStateChange({ isRecording: false, hasVideo: true, elapsedSec: 0 });
+          };
+
+          this.recorder.start(200);
+          this.isRecording = true;
+          this.startTime = performance.now();
+
+          this.timerInterval = setInterval(() => {
+            const sec = Math.floor((performance.now() - this.startTime) / 1000);
+            this.onStateChange({ isRecording: true, hasVideo: Boolean(this.lastBlobUrl), elapsedSec: sec });
+          }, 250);
+
+          this.onStateChange({ isRecording: true, hasVideo: Boolean(this.lastBlobUrl), elapsedSec: 0 });
+        } catch (err) {
+          console.warn('Video kaydı başlatılamadı:', err);
+          this.isRecording = false;
+        }
+      }
+
+      stop() {
+        if (!this.isRecording || !this.recorder) return;
+        try {
+          if (this.recorder.state !== 'inactive') {
+            this.recorder.stop();
+          }
+        } catch (e) {}
+      }
+
+      download(fighter1Name, fighter2Name) {
+        if (!this.lastBlobUrl) return;
+        const safe1 = (fighter1Name || 'f1').toLowerCase().replace(/[^a-z0-9]/gi, '');
+        const safe2 = (fighter2Name || 'f2').toLowerCase().replace(/[^a-z0-9]/gi, '');
+        const a = document.createElement('a');
+        a.href = this.lastBlobUrl;
+        a.download = `clasharena_${safe1}_vs_${safe2}_${Date.now()}.${this.lastExtension}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    }
+
+    // ============================================================================
+    // 6. SIFIR-GC EFEKT HAVUZLARI (Parçacıklar, Şok Dalgaları, Uçan Hasar Yazıları)
+    // ============================================================================
+    class ObjectPools {
+      constructor() {
+        this.particles = Array.from({ length: 140 }, () => ({
+          active: false, x: 0, y: 0, vx: 0, vy: 0, radius: 0, alpha: 0, color: '#ffffff'
+        }));
+        this.shockwaves = Array.from({ length: 20 }, () => ({
+          active: false, x: 0, y: 0, radius: 0, maxRadius: 50, alpha: 0, color: '#ffffff', lineWidth: 3
+        }));
+        this.floatingTexts = Array.from({ length: 40 }, () => ({
+          active: false, x: 0, y: 0, vy: 0, text: '', alpha: 0, color: '#ffffff', size: 14
+        }));
+      }
+
+      spawnBurst(x, y, color, count = 12, speedMult = 1) {
+        let spawned = 0;
+        for (let i = 0; i < this.particles.length && spawned < count; i++) {
+          const p = this.particles[i];
+          if (!p.active) {
+            const angle = Math.random() * Math.PI * 2;
+            const spd = (1.5 + Math.random() * 5.0) * speedMult;
+            p.active = true;
+            p.x = x;
+            p.y = y;
+            p.vx = Math.cos(angle) * spd;
+            p.vy = Math.sin(angle) * spd;
+            p.radius = 2 + Math.random() * 3;
+            p.alpha = 1;
+            p.color = color;
+            spawned++;
+          }
+        }
+      }
+
+      spawnShockwave(x, y, color, maxRadius = 58, lineWidth = 3) {
+        for (let i = 0; i < this.shockwaves.length; i++) {
+          const sw = this.shockwaves[i];
+          if (!sw.active) {
+            sw.active = true;
+            sw.x = x;
+            sw.y = y;
+            sw.radius = 6;
+            sw.maxRadius = maxRadius;
+            sw.alpha = 0.95;
+            sw.color = color;
+            sw.lineWidth = lineWidth;
+            return;
+          }
+        }
+      }
+
+      spawnFloatingText(x, y, text, color, size = 14) {
+        for (let i = 0; i < this.floatingTexts.length; i++) {
+          const ft = this.floatingTexts[i];
+          if (!ft.active) {
+            ft.active = true;
+            ft.x = Math.max(105, Math.min(495, x));
+            ft.y = y;
+            ft.vy = -1.6;
+            ft.text = text;
+            ft.alpha = 1;
+            ft.color = color;
+            ft.size = size;
+            return;
+          }
+        }
+      }
+
+      updateAndDraw(ctx, dtScale, isNeon, glowIntensity) {
+        ctx.save();
+
+        // 1. Şok Dalgaları (Shockwave Rings)
+        for (let i = 0; i < this.shockwaves.length; i++) {
+          const sw = this.shockwaves[i];
+          if (!sw.active) continue;
+          sw.radius += (sw.maxRadius - sw.radius) * 0.18 * dtScale;
+          sw.alpha -= 0.045 * dtScale;
+          if (sw.alpha <= 0.02) {
+            sw.active = false;
+            continue;
+          }
+          ctx.globalAlpha = Math.max(0, sw.alpha);
+          ctx.strokeStyle = sw.color;
+          ctx.lineWidth = sw.lineWidth;
+          if (isNeon && glowIntensity > 0) {
+            ctx.shadowColor = sw.color;
+            ctx.shadowBlur = glowIntensity * 0.6;
+          }
+          ctx.beginPath();
+          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // 2. Kıvılcım Parçacıkları
+        ctx.shadowBlur = 0;
+        for (let i = 0; i < this.particles.length; i++) {
+          const p = this.particles[i];
+          if (!p.active) continue;
+          p.x += p.vx * dtScale;
+          p.y += p.vy * dtScale;
+          p.alpha -= 0.038 * dtScale;
+          if (p.alpha <= 0.02) {
+            p.active = false;
+            continue;
+          }
+          ctx.globalAlpha = Math.max(0, p.alpha);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 3. Uçan Hasar ve Bonus Yazıları
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i < this.floatingTexts.length; i++) {
+          const ft = this.floatingTexts[i];
+          if (!ft.active) continue;
+          ft.y += ft.vy * dtScale;
+          ft.alpha -= 0.026 * dtScale;
+          if (ft.alpha <= 0.02) {
+            ft.active = false;
+            continue;
+          }
+          ctx.globalAlpha = Math.max(0, ft.alpha);
+          ctx.font = `900 ${ft.size}px "JetBrains Mono", monospace`;
+          ctx.fillStyle = '#000000';
+          ctx.fillText(ft.text, ft.x + 1.5, ft.y + 1.5);
+          ctx.fillStyle = ft.color;
+          ctx.fillText(ft.text, ft.x, ft.y);
+        }
+
+        ctx.restore();
+      }
+
+      clear() {
+        for (let i = 0; i < this.particles.length; i++) this.particles[i].active = false;
+        for (let i = 0; i < this.shockwaves.length; i++) this.shockwaves[i].active = false;
+        for (let i = 0; i < this.floatingTexts.length; i++) this.floatingTexts[i].active = false;
+      }
+    }
+
+    // ============================================================================
+    // 7. ANA SİMÜLASYON VE CANVAS ÇİZİM MOTORU
+    // ============================================================================
+    const LOGICAL_WIDTH = 600;
+    const LOGICAL_HEIGHT = 1020;
+    const numberFormatter = new Intl.NumberFormat('en-US');
+
+    function formatNumber(n) {
+      return numberFormatter.format(Math.max(0, Math.round(n)));
+    }
+
+    const soundEngine = new SoundEngine();
+    const pools = new ObjectPools();
+    const canvas = document.getElementById('battleCanvas');
+    // Standart 2D context (alpha: true varsayılanı tüm ekran kartlarında kararma hatasını önler)
+    const ctx = canvas.getContext('2d');
+
+    const TRAIL_LENGTH = 16;
+
+    const state = {
+      status: 'idle', // 'idle' | 'running' | 'finished'
+      winner: null,
+      themeId: 'neon_cyber',
+      glowIntensity: 18,
+      arenaLayout: 'split', // 'split' | 'shared'
+      exportScale: 2,
+      simSpeed: 1.0,
+      gravity: 0.0,
+      barCount: 3,
+      watermark: 'KoalaPhysics',
+      autoRecord: false,
+      showStats: true,
+      showFloatText: true,
+      // İzleyici Heyecan Özellikleri
+      fxCometTrail: true,
+      fxShockwave: true,
+      fxScreenShake: true,
+      fxPowerOrbs: true,
+      fxTugOfWar: true,
+      fxOverdrive: true,
+      fxCritSystem: true,
+      fxSlowMoFinish: true,
+      shakeTime: 0,
+      shakeMagnitude: 0,
+      slowMoTimer: 0,
+      orbSpawnTimer: 0,
+      stopTimeoutId: null,
+      orbs: [], // Arena içinde beliren sürpriz güç küreleri
+      fighters: [
+        {
+          id: 1,
+          name: 'BLAZE',
+          symbol: 'B',
+          color: '#ff2a5f',
+          hpMaxBars: [1000, 1000, 1000, 1000, 1000],
+          hpCurBars: [1000, 1000, 1000, 1000, 1000],
+          baseDmg: 10,
+          sequenceId: 'add_10',
+          radius: 18,
+          speed: 7.5,
+          soundPreset: 'default_beep',
+          mute: false,
+          customImg: null,
+          x: 300,
+          y: 165,
+          vx: 5.2,
+          vy: 4.6,
+          hits: 0,
+          nextDamage: 10,
+          bonusDmgMult: 1,
+          speedBoostTimer: 0,
+          barFlashAlpha: 0,
+          trail: []
+        },
+        {
+          id: 2,
+          name: 'FROST',
+          symbol: 'F',
+          color: '#00f0ff',
+          hpMaxBars: [1000, 1000, 1000, 1000, 1000],
+          hpCurBars: [1000, 1000, 1000, 1000, 1000],
+          baseDmg: 10,
+          sequenceId: 'add_10',
+          radius: 18,
+          speed: 7.5,
+          soundPreset: 'crystal_chime',
+          mute: false,
+          customImg: null,
+          x: 300,
+          y: 660,
+          vx: -5.2,
+          vy: -4.6,
+          hits: 0,
+          nextDamage: 10,
+          bonusDmgMult: 1,
+          speedBoostTimer: 0,
+          barFlashAlpha: 0,
+          trail: []
+        }
+      ]
+    };
+
+    function getArenaGeometry() {
+      const boxX = 76;
+      const boxW = 448;
+      const barH = Math.max(24, Math.min(38, Math.floor(114 / state.barCount)));
+      const checkerH = 11;
+
+      if (state.arenaLayout === 'split') {
+        const topBoxY = 68;
+        const topBoxH = 215;
+        const botBoxY = 562;
+        const botBoxH = 215;
+        return {
+          mode: 'split',
+          boxX,
+          boxW,
+          barH,
+          checkerH,
+          f1Box: { x: boxX, y: topBoxY, w: boxW, h: topBoxH },
+          f2Box: { x: boxX, y: botBoxY, w: boxW, h: botBoxH },
+          vsY: 488
+        };
+      } else {
+        const sharedY = 235;
+        const sharedH = 440;
+        return {
+          mode: 'shared',
+          boxX,
+          boxW,
+          barH,
+          checkerH,
+          sharedBox: { x: boxX, y: sharedY, w: boxW, h: sharedH },
+          f1BarsY: 68,
+          f2BarsY: sharedY + sharedH
+        };
+      }
+    }
+
+    function computeDamageForHit(fighter, hitIndex) {
+      const seq = SEQUENCE_MAP.get(fighter.sequenceId) || DAMAGE_SEQUENCES[0];
+      const val = seq.calc(hitIndex, fighter.baseDmg);
+      return Math.max(1, Math.min(999_999_999, Math.round(val)));
+    }
+
+    function getTotalRemainingHp(fighter) {
+      let sum = 0;
+      for (let i = 0; i < state.barCount; i++) {
+        sum += Math.max(0, fighter.hpCurBars[i]);
+      }
+      return sum;
+    }
+
+    function getTotalMaxHp(fighter) {
+      let sum = 0;
+      for (let i = 0; i < state.barCount; i++) {
+        sum += Math.max(1, fighter.hpMaxBars[i]);
+      }
+      return sum;
+    }
+
+    function getFirstAliveBarIndex(fighter) {
+      for (let i = 0; i < state.barCount; i++) {
+        if (fighter.hpCurBars[i] > 0) return i;
+      }
+      return state.barCount;
+    }
+
+    function isFighterInOverdrive(fighter) {
+      if (!state.fxOverdrive || state.barCount < 2) return false;
+      return getFirstAliveBarIndex(fighter) === state.barCount - 1 && getTotalRemainingHp(fighter) > 0;
+    }
+
+    function applyDamageToFighter(targetFighter, amount) {
+      let rem = amount;
+      let shatteredAnyBar = false;
+      for (let i = 0; i < state.barCount && rem > 0; i++) {
+        if (targetFighter.hpCurBars[i] > 0) {
+          const take = Math.min(targetFighter.hpCurBars[i], rem);
+          targetFighter.hpCurBars[i] -= take;
+          rem -= take;
+          if (targetFighter.hpCurBars[i] <= 0) {
+            shatteredAnyBar = true;
+          }
+        }
+      }
+      return shatteredAnyBar;
+    }
+
+    function triggerScreenShake(magnitude = 7, durationFrames = 12) {
+      if (!state.fxScreenShake) return;
+      state.shakeMagnitude = Math.max(state.shakeMagnitude, magnitude);
+      state.shakeTime = Math.max(state.shakeTime, durationFrames);
+    }
+
+    function spawnPowerOrbForBox(box, fighterId) {
+      const types = [
+        { type: 'x2_dmg', label: '2X DMG', color: '#facc15' },
+        { type: 'speed', label: 'TURBO', color: '#38bdf8' },
+        { type: 'nuke', label: 'LASER', color: '#f43f5e' }
+      ];
+      const chosen = types[Math.floor(Math.random() * types.length)];
+      const margin = 36;
+      const x = box.x + margin + Math.random() * (box.w - margin * 2);
+      const y = box.y + margin + Math.random() * (box.h - margin * 2);
+      state.orbs.push({
+        fighterId,
+        x,
+        y,
+        radius: 13,
+        type: chosen.type,
+        label: chosen.label,
+        color: chosen.color,
+        pulse: 0
+      });
+    }
+
+    function resetPositionsAndHp() {
+      if (state.stopTimeoutId) {
+        clearTimeout(state.stopTimeoutId);
+        state.stopTimeoutId = null;
+      }
+      pools.clear();
+      state.orbs = [];
+      state.orbSpawnTimer = 150;
+      state.shakeTime = 0;
+      state.shakeMagnitude = 0;
+      state.slowMoTimer = 0;
+
+      const geom = getArenaGeometry();
+      const f1 = state.fighters[0];
+      const f2 = state.fighters[1];
+
+      for (let i = 0; i < 5; i++) {
+        f1.hpCurBars[i] = f1.hpMaxBars[i];
+        f2.hpCurBars[i] = f2.hpMaxBars[i];
+      }
+
+      [f1, f2].forEach((f) => {
+        f.hits = 0;
+        f.nextDamage = computeDamageForHit(f, 0);
+        f.bonusDmgMult = 1;
+        f.speedBoostTimer = 0;
+        f.barFlashAlpha = 0;
+        f.trail = [];
+      });
+
+      const angle1 = (Math.random() * 0.42 + 0.68);
+      const angle2 = (Math.random() * 0.42 + 0.68);
+      const dirX1 = Math.random() < 0.5 ? 1 : -1;
+      const dirX2 = Math.random() < 0.5 ? 1 : -1;
+
+      f1.vx = Math.cos(angle1) * f1.speed * dirX1;
+      f1.vy = Math.sin(angle1) * f1.speed;
+      f2.vx = Math.cos(angle2) * f2.speed * dirX2;
+      f2.vy = Math.sin(angle2) * f2.speed;
+
+      if (geom.mode === 'split') {
+        f1.x = geom.f1Box.x + geom.f1Box.w / 2;
+        f1.y = geom.f1Box.y + geom.f1Box.h / 2;
+        f2.x = geom.f2Box.x + geom.f2Box.w / 2;
+        f2.y = geom.f2Box.y + geom.f2Box.h / 2;
+      } else {
+        f1.x = geom.sharedBox.x + geom.sharedBox.w * 0.32;
+        f1.y = geom.sharedBox.y + geom.sharedBox.h * 0.5;
+        f2.x = geom.sharedBox.x + geom.sharedBox.w * 0.68;
+        f2.y = geom.sharedBox.y + geom.sharedBox.h * 0.5;
+      }
+    }
+
+    function triggerBarHit(fighter, hitX, hitY) {
+      let dmg = computeDamageForHit(fighter, fighter.hits);
+      let isCrit = false;
+
+      if (state.fxCritSystem && Math.random() < 0.18) {
+        dmg = Math.round(dmg * 2);
+        isCrit = true;
+      }
+
+      if (fighter.bonusDmgMult > 1) {
+        dmg = Math.round(dmg * fighter.bonusDmgMult);
+        fighter.bonusDmgMult = 1;
+      }
+
+      if (isFighterInOverdrive(fighter)) {
+        dmg = Math.round(dmg * 1.35);
+      }
+
+      fighter.hits += 1;
+      fighter.nextDamage = computeDamageForHit(fighter, fighter.hits);
+      fighter.barFlashAlpha = 0.85;
+
+      const shattered = applyDamageToFighter(fighter, dmg);
+      soundEngine.playHit(fighter.id, fighter.mute, fighter.hits, isCrit, fighter.soundPreset);
+
+      if (state.fxShockwave) {
+        pools.spawnBurst(hitX, hitY, isCrit ? '#facc15' : fighter.color, isCrit ? 18 : 10, isCrit ? 1.35 : 1);
+        pools.spawnShockwave(hitX, hitY, isCrit ? '#facc15' : fighter.color, isCrit ? 75 : 48, isCrit ? 4 : 2.5);
+      }
+
+      if (shattered) {
+        soundEngine.playBarShatter(fighter.mute);
+        triggerScreenShake(9, 14);
+        if (state.fxShockwave) {
+          pools.spawnBurst(LOGICAL_WIDTH / 2, hitY, '#ffffff', 24, 1.6);
+        }
+        pools.spawnFloatingText(LOGICAL_WIDTH / 2, hitY - 22, '💥 BAR SHATTERED!', '#facc15', 16);
+      } else if (isCrit) {
+        triggerScreenShake(4, 6);
+      }
+
+      if (state.showFloatText) {
+        const label = isCrit ? `⚡CRIT -${formatNumber(dmg)}` : `-${formatNumber(dmg)}`;
+        const col = isCrit ? '#facc15' : '#ffffff';
+        pools.spawnFloatingText(hitX, hitY - 12, label, col, isCrit ? 16 : 13);
+      }
+
+      if (getTotalRemainingHp(fighter) <= 0 && state.status === 'running') {
+        if (state.fxSlowMoFinish) {
+          state.slowMoTimer = 38;
+        }
+        state.status = 'finished';
+        state.winner = fighter;
+        triggerScreenShake(14, 22);
+        soundEngine.playVictoryFanfare();
+        updateControlButtons();
+
+        if (videoRecorder.isRecording) {
+          state.stopTimeoutId = setTimeout(() => {
+            videoRecorder.stop();
+          }, 1400);
+        }
+      }
+    }
+
+    function checkOrbCollisions(fighter) {
+      if (!state.fxPowerOrbs) return;
+      for (let i = state.orbs.length - 1; i >= 0; i--) {
+        const orb = state.orbs[i];
+        if (orb.fighterId !== 0 && orb.fighterId !== fighter.id) continue;
+        const dist = Math.hypot(fighter.x - orb.x, fighter.y - orb.y);
+        if (dist <= fighter.radius + orb.radius) {
+          soundEngine.playOrbPickup(fighter.mute);
+          pools.spawnShockwave(orb.x, orb.y, orb.color, 64, 3.5);
+          pools.spawnBurst(orb.x, orb.y, orb.color, 16, 1.3);
+
+          if (orb.type === 'x2_dmg') {
+            fighter.bonusDmgMult = 2.5;
+            pools.spawnFloatingText(orb.x, orb.y, '⚡ 2.5X NEXT HIT!', '#facc15', 15);
+          } else if (orb.type === 'speed') {
+            fighter.speedBoostTimer = 180;
+            pools.spawnFloatingText(orb.x, orb.y, '🚀 TURBO SPEED!', '#38bdf8', 15);
+          } else if (orb.type === 'nuke') {
+            const instantDmg = Math.max(10, Math.round(computeDamageForHit(fighter, fighter.hits) * 1.5));
+            const activeIdx = getFirstAliveBarIndex(fighter);
+            const geom = getArenaGeometry();
+            const floorY = (fighter.id === 1 ? geom.f1Box?.y + geom.f1Box?.h : geom.f2Box?.y + geom.f2Box?.h) || orb.y;
+            applyDamageToFighter(fighter, instantDmg);
+            pools.spawnFloatingText(orb.x, orb.y, `🔥 LASER -${formatNumber(instantDmg)}!`, '#f43f5e', 15);
+            if (getTotalRemainingHp(fighter) <= 0 && state.status === 'running') {
+              state.status = 'finished';
+              state.winner = fighter;
+              soundEngine.playVictoryFanfare();
+              updateControlButtons();
+            }
+          }
+
+          state.orbs.splice(i, 1);
+        }
+      }
+    }
+
+    function stepPhysics(dtScale) {
+      if (state.shakeTime > 0) {
+        state.shakeTime = Math.max(0, state.shakeTime - dtScale);
+      }
+
+      if (state.status !== 'running') return;
+
+      const geom = getArenaGeometry();
+      const f1 = state.fighters[0];
+      const f2 = state.fighters[1];
+
+      // Sürpriz Neon Küre (Power Orb) Üretimi
+      if (state.fxPowerOrbs) {
+        state.orbSpawnTimer -= dtScale;
+        if (state.orbSpawnTimer <= 0) {
+          state.orbSpawnTimer = 210 + Math.random() * 90;
+          if (state.orbs.length < 4) {
+            if (geom.mode === 'split') {
+              spawnPowerOrbForBox(geom.f1Box, 1);
+              spawnPowerOrbForBox(geom.f2Box, 2);
+            } else {
+              spawnPowerOrbForBox(geom.sharedBox, 0);
+            }
+          }
+        }
+      }
+
+      const effDt = dtScale * state.simSpeed;
+      const subSteps = 2;
+      const stepDt = effDt / subSteps;
+
+      for (let s = 0; s < subSteps; s++) {
+        if (state.status !== 'running') break;
+
+        if (geom.mode === 'split') {
+          updateSingleBoxBall(f1, geom.f1Box, geom.barH, stepDt);
+          if (state.status !== 'running') break;
+          updateSingleBoxBall(f2, geom.f2Box, geom.barH, stepDt);
+        } else {
+          updateSharedBoxBalls(f1, f2, geom.sharedBox, stepDt);
+        }
+      }
+
+      // Kuyruklu Yıldız İzi (Comet Trail) Kaydı
+      [f1, f2].forEach((f) => {
+        if (f.barFlashAlpha > 0) f.barFlashAlpha = Math.max(0, f.barFlashAlpha - 0.06 * dtScale);
+        if (f.speedBoostTimer > 0) f.speedBoostTimer = Math.max(0, f.speedBoostTimer - dtScale);
+
+        if (state.fxCometTrail) {
+          f.trail.push({ x: f.x, y: f.y });
+          if (f.trail.length > TRAIL_LENGTH) {
+            f.trail.shift();
+          }
+        } else if (f.trail.length > 0) {
+          f.trail.length = 0;
+        }
+      });
+    }
+
+    function getEffectiveSpeed(fighter) {
+      let spd = fighter.speed;
+      if (fighter.speedBoostTimer > 0) spd *= 1.45;
+      if (isFighterInOverdrive(fighter)) spd *= 1.25;
+      return Math.min(35, spd);
+    }
+
+    function updateSingleBoxBall(fighter, box, barH, stepDt) {
+      const targetSpd = getEffectiveSpeed(fighter);
+      if (state.gravity === 0) {
+        const curSpd = Math.hypot(fighter.vx, fighter.vy) || 1;
+        fighter.vx = (fighter.vx / curSpd) * targetSpd;
+        fighter.vy = (fighter.vy / curSpd) * targetSpd;
+      }
+
+      fighter.vy += state.gravity * stepDt;
+      fighter.x += fighter.vx * stepDt;
+      fighter.y += fighter.vy * stepDt;
+
+      // Yan duvarlar: Sadece sekme olur, hasar veya efekt oluşmaz
+      if (fighter.x - fighter.radius <= box.x) {
+        fighter.x = box.x + fighter.radius;
+        fighter.vx = Math.abs(fighter.vx);
+      } else if (fighter.x + fighter.radius >= box.x + box.w) {
+        fighter.x = box.x + box.w - fighter.radius;
+        fighter.vx = -Math.abs(fighter.vx);
+      }
+
+      // Üst duvar: Sadece sekme olur, hasar veya efekt oluşmaz
+      if (fighter.y - fighter.radius <= box.y) {
+        fighter.y = box.y + fighter.radius;
+        fighter.vy = Math.abs(fighter.vy);
+      }
+
+      // Sürpriz Küre kontrolü
+      checkOrbCollisions(fighter);
+
+      // Alt sınır: En üstteki aktif (dolu) barın üst yüzeyi
+      const activeBarIdx = getFirstAliveBarIndex(fighter);
+      const currentFloorY = box.y + box.h + activeBarIdx * barH;
+
+      if (fighter.y + fighter.radius >= currentFloorY) {
+        fighter.y = currentFloorY - fighter.radius;
+        fighter.vy = -Math.abs(fighter.vy);
+
+        if (state.gravity === 0) {
+          const curSpd = Math.hypot(fighter.vx, fighter.vy) || 1;
+          fighter.vx = (fighter.vx / curSpd) * targetSpd;
+          fighter.vy = (fighter.vy / curSpd) * targetSpd;
+        }
+
+        triggerBarHit(fighter, fighter.x, currentFloorY);
+      }
+    }
+
+    function updateSharedBoxBalls(f1, f2, box, stepDt) {
+      [f1, f2].forEach((f) => {
+        const targetSpd = getEffectiveSpeed(f);
+        f.vy += state.gravity * stepDt;
+        f.x += f.vx * stepDt;
+        f.y += f.vy * stepDt;
+
+        if (f.x - f.radius <= box.x) {
+          f.x = box.x + f.radius;
+          f.vx = Math.abs(f.vx);
+        } else if (f.x + f.radius >= box.x + box.w) {
+          f.x = box.x + box.w - f.radius;
+          f.vx = -Math.abs(f.vx);
+        }
+
+        if (f.y - f.radius <= box.y) {
+          f.y = box.y + f.radius;
+          f.vy = Math.abs(f.vy);
+        } else if (f.y + f.radius >= box.y + box.h) {
+          f.y = box.y + box.h - f.radius;
+          f.vy = -Math.abs(f.vy);
+        }
+
+        checkOrbCollisions(f);
+      });
+
+      const dx = f2.x - f1.x;
+      const dy = f2.y - f1.y;
+      const dist = Math.hypot(dx, dy);
+      const minDist = f1.radius + f2.radius;
+
+      if (dist > 0 && dist <= minDist) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const overlap = (minDist - dist) * 0.5 + 0.5;
+
+        f1.x -= nx * overlap;
+        f1.y -= ny * overlap;
+        f2.x += nx * overlap;
+        f2.y += ny * overlap;
+
+        const v1x = f1.vx, v1y = f1.vy;
+        f1.vx = f2.vx;
+        f1.vy = f2.vy;
+        f2.vx = v1x;
+        f2.vy = v1y;
+
+        const s1 = Math.hypot(f1.vx, f1.vy) || 1;
+        f1.vx = (f1.vx / s1) * getEffectiveSpeed(f1);
+        f1.vy = (f1.vy / s1) * getEffectiveSpeed(f1);
+
+        const s2 = Math.hypot(f2.vx, f2.vy) || 1;
+        f2.vx = (f2.vx / s2) * getEffectiveSpeed(f2);
+        f2.vy = (f2.vy / s2) * getEffectiveSpeed(f2);
+
+        const midX = (f1.x + f2.x) * 0.5;
+        const midY = (f1.y + f2.y) * 0.5;
+
+        triggerBarHit(f1, midX, midY);
+        if (state.status === 'running') {
+          triggerBarHit(f2, midX, midY);
+        }
+      }
+    }
+
+    function fillRoundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(x, y, w, h, r);
+      } else {
+        ctx.rect(x, y, w, h);
+      }
+      ctx.fill();
+    }
+
+    function drawCyberGrid(boxX, boxY, boxW, boxH, gridColor) {
+      if (!gridColor) return;
+      ctx.save();
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      const step = 28;
+      ctx.beginPath();
+      for (let x = boxX + step; x < boxX + boxW; x += step) {
+        ctx.moveTo(x, boxY);
+        ctx.lineTo(x, boxY + boxH);
+      }
+      for (let y = boxY + step; y < boxY + boxH; y += step) {
+        ctx.moveTo(boxX, y);
+        ctx.lineTo(boxX + boxW, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Doğrudan vektörel damalı (checkerboard) çizim — createPattern hatası veya kararması asla yaşanmaz
+    function drawCheckerboardStrip(startX, startY, width, height) {
+      ctx.save();
+      ctx.fillStyle = '#0f1115';
+      ctx.fillRect(startX, startY, width, height);
+      ctx.fillStyle = '#9ca3af';
+      const tileW = 12;
+      for (let x = 0; x < width; x += tileW * 2) {
+        const w = Math.min(tileW, width - x);
+        ctx.fillRect(startX + x + tileW, startY, Math.max(0, Math.min(tileW, width - (x + tileW))), height);
+      }
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#090a0c';
+      ctx.strokeRect(startX, startY, width, height);
+      ctx.restore();
+    }
+
+    function drawHealthBars(fighter, startX, startY, boxW, barH, checkerH, theme) {
+      const activeIdx = getFirstAliveBarIndex(fighter);
+
+      for (let i = 0; i < state.barCount; i++) {
+        const y = startY + i * barH;
+        const maxHp = Math.max(1, fighter.hpMaxBars[i]);
+        const curHp = Math.max(0, fighter.hpCurBars[i]);
+        const ratio = Math.max(0, Math.min(1, curHp / maxHp));
+
+        if (curHp <= 0) {
+          // Kırılan bar artık arena boşluğuna dahil olur
+          ctx.fillStyle = theme.boxBg;
+          ctx.fillRect(startX, y, boxW, barH);
+          if (theme.gridColor) {
+            drawCyberGrid(startX, y, boxW, barH, theme.gridColor);
+          }
+          continue;
+        }
+
+        // Boş bar zemini
+        ctx.fillStyle = theme.emptyBarBg;
+        ctx.fillRect(startX, y, boxW, barH);
+
+        // Dolu can barı (Neon modda parlama efektiyle)
+        ctx.save();
+        if (theme.isNeon && state.glowIntensity > 0 && i === activeIdx) {
+          ctx.shadowColor = fighter.color;
+          ctx.shadowBlur = state.glowIntensity * 0.75;
+        }
+        ctx.fillStyle = fighter.color;
+        ctx.fillRect(startX, y, boxW * ratio, barH);
+        ctx.restore();
+
+        // Aktif bar vuruş flaşı
+        if (i === activeIdx && fighter.barFlashAlpha > 0) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${fighter.barFlashAlpha * 0.38})`;
+          ctx.fillRect(startX, y, boxW * ratio, barH);
+        }
+
+        // Bar çerçevesi
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#090a0c';
+        ctx.strokeRect(startX, y, boxW, barH);
+
+        // Bar üzerindeki kalan HP sayısı
+        ctx.font = '800 16px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = theme.isNeon ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.55)';
+        ctx.fillText(formatNumber(curHp), startX + boxW / 2, y + barH / 2 + 1);
+      }
+
+      const checkerY = startY + state.barCount * barH;
+      drawCheckerboardStrip(startX, checkerY, boxW, checkerH);
+    }
+
+    function drawPowerOrbs(theme) {
+      if (!state.fxPowerOrbs || state.orbs.length === 0) return;
+      ctx.save();
+      for (let i = 0; i < state.orbs.length; i++) {
+        const orb = state.orbs[i];
+        orb.pulse += 0.08;
+        const r = orb.radius + Math.sin(orb.pulse) * 2;
+
+        if (theme.isNeon && state.glowIntensity > 0) {
+          ctx.shadowColor = orb.color;
+          ctx.shadowBlur = state.glowIntensity;
+        }
+
+        ctx.fillStyle = orb.color;
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        ctx.font = '800 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(orb.label, orb.x, orb.y - r - 8);
+      }
+      ctx.restore();
+    }
+
+    function drawBall(fighter, theme) {
+      const overdrive = isFighterInOverdrive(fighter);
+
+      // 1. Kuyruklu Yıldız İzi (Comet Trail)
+      if (state.fxCometTrail && fighter.trail.length > 1) {
+        ctx.save();
+        for (let i = 0; i < fighter.trail.length; i++) {
+          const pt = fighter.trail[i];
+          const progress = (i + 1) / fighter.trail.length;
+          ctx.globalAlpha = progress * 0.36;
+          ctx.fillStyle = overdrive ? '#facc15' : fighter.color;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, fighter.radius * (0.35 + progress * 0.55), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // 2. Top Gövdesi ve Neon Glow
+      ctx.save();
+      if (theme.isNeon && state.glowIntensity > 0) {
+        ctx.shadowColor = overdrive ? '#facc15' : fighter.color;
+        ctx.shadowBlur = overdrive ? state.glowIntensity * 1.4 : state.glowIntensity;
+      }
+
+      ctx.beginPath();
+      ctx.arc(fighter.x, fighter.y, fighter.radius, 0, Math.PI * 2);
+
+      if (fighter.customImg) {
+        ctx.save();
+        ctx.clip();
+        ctx.drawImage(
+          fighter.customImg,
+          fighter.x - fighter.radius,
+          fighter.y - fighter.radius,
+          fighter.radius * 2,
+          fighter.radius * 2
+        );
+        ctx.restore();
+      } else {
+        ctx.fillStyle = fighter.color;
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        const sym = (fighter.symbol || fighter.name.charAt(0) || '?').trim();
+        ctx.font = `800 ${Math.max(10, Math.round(fighter.radius * 0.78))}px "Inter", sans-serif`;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sym, fighter.x, fighter.y + 1);
+      }
+
+      // Overdrive veya 2X Bonus Halkası
+      ctx.lineWidth = overdrive || fighter.bonusDmgMult > 1 ? 3.5 : 2.5;
+      ctx.strokeStyle = overdrive ? '#facc15' : (theme.isNeon ? '#ffffff' : '#090a0c');
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Ortadaki Canlı Üstünlük Çubuğu (Tug-of-War Dominance Bar)
+    function drawTugOfWarBar(f1, f2, x, y, w, theme) {
+      const rem1 = Math.max(0, getTotalRemainingHp(f1));
+      const rem2 = Math.max(0, getTotalRemainingHp(f2));
+      const max1 = Math.max(1, getTotalMaxHp(f1));
+      const max2 = Math.max(1, getTotalMaxHp(f2));
+
+      // Yarışı kim önde götürüyor? (Kendi barlarını daha yüksek oranda eriten öndedir!)
+      const prog1 = Math.max(0.01, 1 - rem1 / max1);
+      const prog2 = Math.max(0.01, 1 - rem2 / max2);
+      const f1Share = prog1 / (prog1 + prog2);
+
+      const h = 14;
+      ctx.save();
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x, y, w, h);
+
+      ctx.fillStyle = f1.color;
+      ctx.fillRect(x, y, w * f1Share, h);
+
+      ctx.fillStyle = f2.color;
+      ctx.fillRect(x + w * f1Share, y, w * (1 - f1Share), h);
+
+      // Merkez beyaz çizgi
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + w * f1Share - 1.5, y - 2, 3, h + 4);
+
+      ctx.strokeStyle = '#090a0c';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, w, h);
+
+      const pct1 = Math.round(f1Share * 100);
+      const pct2 = 100 - pct1;
+      ctx.font = '800 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${f1.name} ${pct1}%`, x + 6, y + h / 2 + 0.5);
+      ctx.textAlign = 'right';
+      ctx.fillText(`${pct2}% ${f2.name}`, x + w - 6, y + h / 2 + 0.5);
+      ctx.restore();
+    }
+
+    function renderScene(dtScale) {
+      const scale = state.exportScale;
+      const theme = THEMES[state.themeId] || THEMES.neon_cyber;
+
+      ctx.save();
+      ctx.scale(scale, scale);
+
+      // Ekran Sarsıntısı (Screen Shake)
+      if (state.shakeTime > 0 && state.fxScreenShake) {
+        const dx = (Math.random() - 0.5) * state.shakeMagnitude;
+        const dy = (Math.random() - 0.5) * state.shakeMagnitude;
+        ctx.translate(dx, dy);
+      }
+
+      // 1. Dış Çerçeve
+      ctx.fillStyle = theme.outerFrame;
+      ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+
+      // 2. İç Arena Gövdesi
+      ctx.fillStyle = theme.innerBoard;
+      fillRoundRect(ctx, 16, 16, LOGICAL_WIDTH - 32, LOGICAL_HEIGHT - 64, 14);
+
+      const geom = getArenaGeometry();
+      const f1 = state.fighters[0];
+      const f2 = state.fighters[1];
+
+      if (geom.mode === 'split') {
+        const totalBarsHeight = state.barCount * geom.barH;
+
+        // FIGHTER 1 BAŞLIK VE İSTATİSTİK
+        ctx.save();
+        if (theme.isNeon && state.glowIntensity > 0) {
+          ctx.shadowColor = f1.color;
+          ctx.shadowBlur = state.glowIntensity * 0.8;
+        }
+        ctx.font = '900 22px "Inter", sans-serif';
+        ctx.fillStyle = f1.color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const f1Title = isFighterInOverdrive(f1) ? `🔥 ${f1.name} [OVERDRIVE]` : (f1.name || 'FIGHTER 1');
+        ctx.fillText(f1Title, LOGICAL_WIDTH / 2, 42);
+        ctx.restore();
+
+        if (state.showStats) {
+          ctx.font = '700 11.5px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(255,255,255,0.75)';
+          ctx.textAlign = 'left';
+          ctx.fillText(`HITS: ${f1.hits}`, geom.boxX, 42);
+          ctx.textAlign = 'right';
+          ctx.fillText(`DMG: ${formatNumber(f1.nextDamage)}`, geom.boxX + geom.boxW, 42);
+        }
+
+        // FIGHTER 1 KUTUSU VE CAN BARLARI
+        ctx.fillStyle = theme.boxBg;
+        ctx.fillRect(geom.f1Box.x, geom.f1Box.y, geom.f1Box.w, geom.f1Box.h);
+        drawCyberGrid(geom.f1Box.x, geom.f1Box.y, geom.f1Box.w, geom.f1Box.h, theme.gridColor);
+        drawHealthBars(f1, geom.boxX, geom.f1Box.y + geom.f1Box.h, geom.boxW, geom.barH, geom.checkerH, theme);
+
+        ctx.save();
+        if (theme.isNeon && state.glowIntensity > 0) {
+          ctx.shadowColor = f1.color;
+          ctx.shadowBlur = state.glowIntensity * 0.45;
+        }
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = theme.isNeon ? f1.color : theme.borderStroke;
+        ctx.strokeRect(geom.f1Box.x, geom.f1Box.y, geom.f1Box.w, geom.f1Box.h + totalBarsHeight);
+        ctx.restore();
+
+        // ORTA BÖLGE: CANLI ÜSTÜNLÜK ÇUBUĞU VE VS METNİ
+        if (state.fxTugOfWar) {
+          drawTugOfWarBar(f1, f2, geom.boxX, geom.vsY - 34, geom.boxW, theme);
+        } else {
+          ctx.textAlign = 'center';
+          ctx.font = '900 15px "Inter", sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.fillText('VS', LOGICAL_WIDTH / 2, geom.vsY - 10);
+        }
+
+        if (state.status === 'idle') {
+          ctx.font = '800 16px "Inter", sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.fillText('Tap to start', LOGICAL_WIDTH / 2, geom.vsY + 2);
+        }
+
+        // FIGHTER 2 BAŞLIK VE İSTATİSTİK
+        ctx.save();
+        if (theme.isNeon && state.glowIntensity > 0) {
+          ctx.shadowColor = f2.color;
+          ctx.shadowBlur = state.glowIntensity * 0.8;
+        }
+        ctx.font = '900 22px "Inter", sans-serif';
+        ctx.fillStyle = f2.color;
+        ctx.textAlign = 'center';
+        const f2Title = isFighterInOverdrive(f2) ? `🔥 ${f2.name} [OVERDRIVE]` : (f2.name || 'FIGHTER 2');
+        ctx.fillText(f2Title, LOGICAL_WIDTH / 2, geom.f2Box.y - 24);
+        ctx.restore();
+
+        if (state.showStats) {
+          ctx.font = '700 11.5px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(255,255,255,0.75)';
+          ctx.textAlign = 'left';
+          ctx.fillText(`HITS: ${f2.hits}`, geom.boxX, geom.f2Box.y - 24);
+          ctx.textAlign = 'right';
+          ctx.fillText(`DMG: ${formatNumber(f2.nextDamage)}`, geom.boxX + geom.boxW, geom.f2Box.y - 24);
+        }
+
+        // FIGHTER 2 KUTUSU VE CAN BARLARI
+        ctx.fillStyle = theme.boxBg;
+        ctx.fillRect(geom.f2Box.x, geom.f2Box.y, geom.f2Box.w, geom.f2Box.h);
+        drawCyberGrid(geom.f2Box.x, geom.f2Box.y, geom.f2Box.w, geom.f2Box.h, theme.gridColor);
+
+        if (state.watermark.trim()) {
+          ctx.font = '700 21px "Inter", sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+          ctx.textAlign = 'center';
+          ctx.fillText(state.watermark.trim(), LOGICAL_WIDTH / 2, geom.f2Box.y + 30);
+        }
+
+        drawHealthBars(f2, geom.boxX, geom.f2Box.y + geom.f2Box.h, geom.boxW, geom.barH, geom.checkerH, theme);
+
+        ctx.save();
+        if (theme.isNeon && state.glowIntensity > 0) {
+          ctx.shadowColor = f2.color;
+          ctx.shadowBlur = state.glowIntensity * 0.45;
+        }
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = theme.isNeon ? f2.color : theme.borderStroke;
+        ctx.strokeRect(geom.f2Box.x, geom.f2Box.y, geom.f2Box.w, geom.f2Box.h + totalBarsHeight);
+        ctx.restore();
+
+        // SÜRPRİZ KÜRELER VE TOPLAR
+        drawPowerOrbs(theme);
+        drawBall(f1, theme);
+        drawBall(f2, theme);
+
+      } else {
+        // ORTAK ARENA MODU (SHARED)
+        ctx.font = '900 22px "Inter", sans-serif';
+        ctx.fillStyle = f1.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${f1.name}  VS  ${f2.name}`, LOGICAL_WIDTH / 2, 42);
+
+        drawHealthBars(f1, geom.boxX, geom.f1BarsY, geom.boxW, geom.barH, geom.checkerH, theme);
+
+        ctx.fillStyle = theme.boxBg;
+        ctx.fillRect(geom.sharedBox.x, geom.sharedBox.y, geom.sharedBox.w, geom.sharedBox.h);
+        drawCyberGrid(geom.sharedBox.x, geom.sharedBox.y, geom.sharedBox.w, geom.sharedBox.h, theme.gridColor);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = theme.borderStroke;
+        ctx.strokeRect(geom.sharedBox.x, geom.sharedBox.y, geom.sharedBox.w, geom.sharedBox.h);
+
+        if (state.watermark.trim()) {
+          ctx.font = '700 22px "Inter", sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.13)';
+          ctx.textAlign = 'center';
+          ctx.fillText(state.watermark.trim(), LOGICAL_WIDTH / 2, geom.sharedBox.y + 34);
+        }
+
+        drawHealthBars(f2, geom.boxX, geom.f2BarsY, geom.boxW, geom.barH, geom.checkerH, theme);
+
+        drawPowerOrbs(theme);
+        drawBall(f1, theme);
+        drawBall(f2, theme);
+      }
+
+      // Parçacık, Şok Dalgası ve Uçan Hasar Efektleri
+      pools.updateAndDraw(ctx, dtScale, theme.isNeon, state.glowIntensity);
+
+      // ZAFER AFİŞİ (Savaş Bittiğinde)
+      if (state.status === 'finished' && state.winner) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(9, 11, 16, 0.88)';
+        fillRoundRect(ctx, 85, 425, LOGICAL_WIDTH - 170, 120, 14);
+        if (theme.isNeon && state.glowIntensity > 0) {
+          ctx.shadowColor = state.winner.color;
+          ctx.shadowBlur = state.glowIntensity;
+        }
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = state.winner.color;
+        ctx.strokeRect(85, 425, LOGICAL_WIDTH - 170, 120);
+        ctx.restore();
+
+        ctx.textAlign = 'center';
+        ctx.font = '900 30px "Inter", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`🏆 ${state.winner.name} WINS!`, LOGICAL_WIDTH / 2, 472);
+
+        ctx.font = '600 14px "Inter", sans-serif';
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText('Yeniden başlatmak için arenaya tıklayın', LOGICAL_WIDTH / 2, 514);
+      }
+
+      // Alt Bilgi Metni
+      ctx.font = '500 14px "Inter", sans-serif';
+      ctx.fillStyle = theme.footerText;
+      ctx.textAlign = 'center';
+      ctx.fillText('Configure your fighters, then tap the arena to begin.', LOGICAL_WIDTH / 2, LOGICAL_HEIGHT - 22);
+
+      ctx.restore();
+    }
+
+    // ============================================================================
+    // 8. KULLANICI ARAYÜZÜ BAĞLANTILARI VE KONTROLLER
+    // ============================================================================
+    const recIndicator = document.getElementById('recIndicator');
+    const recTimerText = document.getElementById('recTimerText');
+    const btnQuickNeon = document.getElementById('btnQuickNeon');
+    const btnStartStop = document.getElementById('btnStartStop');
+    const btnReset = document.getElementById('btnReset');
+    const btnRecordToggle = document.getElementById('btnRecordToggle');
+    const btnDownloadVideo = document.getElementById('btnDownloadVideo');
+    const fpsCounter = document.getElementById('fpsCounter');
+
+    const videoRecorder = new VideoRecorder(canvas, soundEngine, ({ isRecording, hasVideo, elapsedSec }) => {
+      recIndicator.classList.toggle('active', isRecording);
+      const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+      const secs = String(elapsedSec % 60).padStart(2, '0');
+      recTimerText.textContent = `REC ${mins}:${secs}`;
+      btnRecordToggle.textContent = isRecording ? '⏹ Kaydı Durdur' : '⏺ Kayıt & Başlat';
+      btnDownloadVideo.disabled = !hasVideo;
+    });
+
+    function populateSequenceDropdowns() {
+      ['f1Sequence', 'f2Sequence'].forEach((selectId) => {
+        const selectEl = document.getElementById(selectId);
+        selectEl.innerHTML = '';
+        const groups = {};
+        DAMAGE_SEQUENCES.forEach((seq) => {
+          if (!groups[seq.group]) {
+            const optGroup = document.createElement('optgroup');
+            optGroup.label = seq.group;
+            groups[seq.group] = optGroup;
+            selectEl.appendChild(optGroup);
+          }
+          const option = document.createElement('option');
+          option.value = seq.id;
+          option.textContent = seq.label;
+          if (seq.id === 'add_10') option.selected = true;
+          groups[seq.group].appendChild(option);
+        });
+      });
+    }
+
+    function renderHpBarInputs() {
+      [0, 1].forEach((idx) => {
+        const fighter = state.fighters[idx];
+        const prefix = idx === 0 ? 'f1' : 'f2';
+        const container = document.getElementById(`${prefix}HpBarsContainer`);
+        container.innerHTML = '';
+
+        for (let b = 0; b < state.barCount; b++) {
+          const inp = document.createElement('input');
+          inp.type = 'number';
+          inp.min = '1';
+          inp.max = '999999999';
+          inp.value = fighter.hpMaxBars[b];
+          inp.addEventListener('input', () => {
+            const val = Math.max(1, parseInt(inp.value, 10) || 1);
+            fighter.hpMaxBars[b] = val;
+            if (state.status !== 'running') {
+              fighter.hpCurBars[b] = val;
+            }
+            updateTotalHpLabels();
+          });
+          container.appendChild(inp);
+        }
+      });
+      updateTotalHpLabels();
+    }
+
+    function updateTotalHpLabels() {
+      document.getElementById('f1TotalHpLabel').textContent = `${formatNumber(getTotalMaxHp(state.fighters[0]))} total`;
+      document.getElementById('f2TotalHpLabel').textContent = `${formatNumber(getTotalMaxHp(state.fighters[1]))} total`;
+    }
+
+    function updateControlButtons() {
+      if (state.status === 'running') {
+        btnStartStop.textContent = '⏸ Duraklat (Space)';
+      } else if (state.status === 'finished') {
+        btnStartStop.textContent = '▶ Yeniden Başlat';
+      } else {
+        btnStartStop.textContent = '▶ Başlat (Space)';
+      }
+    }
+
+    function startOrToggleBattle(forceRecord = false) {
+      soundEngine.init();
+
+      if (state.status === 'running') {
+        state.status = 'idle';
+        soundEngine.stopBgm();
+        if (videoRecorder.isRecording) videoRecorder.stop();
+        updateControlButtons();
+        return;
+      }
+
+      if (state.status === 'finished') {
+        resetPositionsAndHp();
+      }
+
+      state.status = 'running';
+      state.winner = null;
+      soundEngine.startBgm();
+
+      if (forceRecord || state.autoRecord) {
+        videoRecorder.start();
+      }
+
+      updateControlButtons();
+    }
+
+    function bindFighterInputs(idx) {
+      const fighter = state.fighters[idx];
+      const prefix = idx === 0 ? 'f1' : 'f2';
+
+      const nameEl = document.getElementById(`${prefix}Name`);
+      const symEl = document.getElementById(`${prefix}Symbol`);
+      const colorEl = document.getElementById(`${prefix}Color`);
+      const dotEl = document.getElementById(`${prefix}Dot`);
+      const baseDmgEl = document.getElementById(`${prefix}BaseDmg`);
+      const radiusEl = document.getElementById(`${prefix}Radius`);
+      const speedEl = document.getElementById(`${prefix}Speed`);
+      const seqEl = document.getElementById(`${prefix}Sequence`);
+      const imgInput = document.getElementById(`${prefix}ImageInput`);
+      const clearImgBtn = document.getElementById(`${prefix}ClearImg`);
+      const sndPresetEl = document.getElementById(`${prefix}SoundPreset`);
+      const testSndBtn = document.getElementById(`${prefix}TestSound`);
+      const sndInput = document.getElementById(`${prefix}SoundInput`);
+      const clearSndBtn = document.getElementById(`${prefix}ClearSound`);
+      const sndStatus = document.getElementById(`${prefix}SoundStatus`);
+      const muteEl = document.getElementById(`${prefix}Mute`);
+
+      sndPresetEl.addEventListener('change', () => {
+        fighter.soundPreset = sndPresetEl.value;
+        soundEngine.playHit(fighter.id, false, fighter.hits, false, fighter.soundPreset, true);
+      });
+
+      testSndBtn.addEventListener('click', () => {
+        soundEngine.playHit(fighter.id, false, fighter.hits, false, fighter.soundPreset, true);
+      });
+      const syncHpBtn = document.getElementById(`${prefix}SyncHpBtn`);
+
+      nameEl.addEventListener('input', () => {
+        fighter.name = nameEl.value;
+      });
+
+      symEl.addEventListener('input', () => {
+        fighter.symbol = symEl.value;
+      });
+
+      colorEl.addEventListener('input', () => {
+        fighter.color = colorEl.value;
+        dotEl.style.background = colorEl.value;
+      });
+
+      baseDmgEl.addEventListener('input', () => {
+        fighter.baseDmg = Math.max(1, parseInt(baseDmgEl.value, 10) || 1);
+        fighter.nextDamage = computeDamageForHit(fighter, fighter.hits);
+      });
+
+      radiusEl.addEventListener('input', () => {
+        fighter.radius = Math.max(8, Math.min(90, parseInt(radiusEl.value, 10) || 18));
+      });
+
+      speedEl.addEventListener('input', () => {
+        fighter.speed = Math.max(1, Math.min(30, parseFloat(speedEl.value) || 7));
+        const curSpd = Math.hypot(fighter.vx, fighter.vy) || 1;
+        fighter.vx = (fighter.vx / curSpd) * fighter.speed;
+        fighter.vy = (fighter.vy / curSpd) * fighter.speed;
+      });
+
+      seqEl.addEventListener('change', () => {
+        fighter.sequenceId = seqEl.value;
+        fighter.nextDamage = computeDamageForHit(fighter, fighter.hits);
+      });
+
+      syncHpBtn.addEventListener('click', () => {
+        const firstBarVal = fighter.hpMaxBars[0] || 1000;
+        for (let i = 0; i < 5; i++) {
+          fighter.hpMaxBars[i] = firstBarVal;
+          if (state.status !== 'running') fighter.hpCurBars[i] = firstBarVal;
+        }
+        renderHpBarInputs();
+      });
+
+      imgInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            fighter.customImg = img;
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      clearImgBtn.addEventListener('click', () => {
+        fighter.customImg = null;
+        imgInput.value = '';
+      });
+
+      sndInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          await soundEngine.loadCustomAudio(fighter.id, file);
+          sndStatus.textContent = `Custom: ${file.name}`;
+        } catch (err) {
+          sndStatus.textContent = 'Ses dosyası okunamadı, varsayılan bip aktif';
+        }
+      });
+
+      clearSndBtn.addEventListener('click', () => {
+        soundEngine.clearCustomAudio(fighter.id);
+        sndInput.value = '';
+        sndStatus.textContent = 'Using default beep';
+      });
+
+      muteEl.addEventListener('change', () => {
+        fighter.mute = muteEl.checked;
+      });
+    }
+
+    function applyPreset(presetKey) {
+      const p = PRESETS[presetKey];
+      if (!p) return;
+
+      state.status = 'idle';
+      if (videoRecorder.isRecording) videoRecorder.stop();
+
+      if (p.theme) {
+        state.themeId = p.theme;
+        document.getElementById('themeSelect').value = p.theme;
+      }
+
+      state.barCount = p.barCount;
+      document.getElementById('barCountSelect').value = String(p.barCount);
+
+      [
+        { cfg: p.f1, f: state.fighters[0], prefix: 'f1' },
+        { cfg: p.f2, f: state.fighters[1], prefix: 'f2' }
+      ].forEach(({ cfg, f, prefix }) => {
+        f.name = cfg.name;
+        f.symbol = cfg.symbol;
+        f.color = cfg.color;
+        f.baseDmg = cfg.baseDmg;
+        f.sequenceId = cfg.seq;
+        f.radius = cfg.radius;
+        f.speed = cfg.speed;
+        for (let i = 0; i < 5; i++) {
+          const val = cfg.hpBars[i] !== undefined ? cfg.hpBars[i] : cfg.hpBars[cfg.hpBars.length - 1];
+          f.hpMaxBars[i] = val;
+          f.hpCurBars[i] = val;
+        }
+
+        document.getElementById(`${prefix}Name`).value = f.name;
+        document.getElementById(`${prefix}Symbol`).value = f.symbol;
+        document.getElementById(`${prefix}Color`).value = f.color;
+        document.getElementById(`${prefix}Dot`).style.background = f.color;
+        document.getElementById(`${prefix}BaseDmg`).value = f.baseDmg;
+        document.getElementById(`${prefix}Radius`).value = f.radius;
+        document.getElementById(`${prefix}Speed`).value = f.speed;
+        document.getElementById(`${prefix}Sequence`).value = f.sequenceId;
+      });
+
+      renderHpBarInputs();
+      resetPositionsAndHp();
+      updateControlButtons();
+    }
+
+    // Genel Kontrollerin Bağlanması
+    populateSequenceDropdowns();
+    renderHpBarInputs();
+    bindFighterInputs(0);
+    bindFighterInputs(1);
+    resetPositionsAndHp();
+
+    document.querySelectorAll('.preset-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        applyPreset(btn.getAttribute('data-preset'));
+      });
+    });
+
+    btnQuickNeon.addEventListener('click', () => {
+      if (state.themeId === 'classic') {
+        applyPreset('neon_cyber');
+      } else {
+        applyPreset('classic');
+      }
+    });
+
+    document.getElementById('themeSelect').addEventListener('change', (e) => {
+      state.themeId = e.target.value;
+    });
+
+    document.getElementById('glowIntensityRange').addEventListener('input', (e) => {
+      state.glowIntensity = parseInt(e.target.value, 10) || 0;
+      document.getElementById('glowIntensityVal').textContent = `${state.glowIntensity}px`;
+    });
+
+    // İzleyici Heyecan Paketi Checkbox Bağlantıları
+    const fxBindings = [
+      ['fxCometTrail', 'fxCometTrail'],
+      ['fxShockwave', 'fxShockwave'],
+      ['fxScreenShake', 'fxScreenShake'],
+      ['fxPowerOrbs', 'fxPowerOrbs'],
+      ['fxTugOfWar', 'fxTugOfWar'],
+      ['fxOverdrive', 'fxOverdrive'],
+      ['fxCritSystem', 'fxCritSystem'],
+      ['fxSlowMoFinish', 'fxSlowMoFinish']
+    ];
+    fxBindings.forEach(([elId, prop]) => {
+      const el = document.getElementById(elId);
+      if (el) {
+        el.addEventListener('change', () => {
+          state[prop] = el.checked;
+          if (prop === 'fxPowerOrbs' && !el.checked) state.orbs = [];
+        });
+      }
+    });
+
+    document.getElementById('btnSwapFighters').addEventListener('click', () => {
+      const f1 = state.fighters[0];
+      const f2 = state.fighters[1];
+      const props = ['name', 'symbol', 'color', 'baseDmg', 'sequenceId', 'radius', 'speed', 'customImg'];
+      props.forEach((k) => {
+        const tmp = f1[k];
+        f1[k] = f2[k];
+        f2[k] = tmp;
+      });
+      for (let i = 0; i < 5; i++) {
+        const tmpMax = f1.hpMaxBars[i];
+        f1.hpMaxBars[i] = f2.hpMaxBars[i];
+        f2.hpMaxBars[i] = tmpMax;
+      }
+
+      ['f1', 'f2'].forEach((prefix, idx) => {
+        const f = state.fighters[idx];
+        document.getElementById(`${prefix}Name`).value = f.name;
+        document.getElementById(`${prefix}Symbol`).value = f.symbol;
+        document.getElementById(`${prefix}Color`).value = f.color;
+        document.getElementById(`${prefix}Dot`).style.background = f.color;
+        document.getElementById(`${prefix}BaseDmg`).value = f.baseDmg;
+        document.getElementById(`${prefix}Radius`).value = f.radius;
+        document.getElementById(`${prefix}Speed`).value = f.speed;
+        document.getElementById(`${prefix}Sequence`).value = f.sequenceId;
+      });
+
+      renderHpBarInputs();
+      resetPositionsAndHp();
+    });
+
+    document.getElementById('arenaLayoutSelect').addEventListener('change', (e) => {
+      state.arenaLayout = e.target.value;
+      state.status = 'idle';
+      resetPositionsAndHp();
+      updateControlButtons();
+    });
+
+    document.getElementById('exportScaleSelect').addEventListener('change', (e) => {
+      state.exportScale = parseInt(e.target.value, 10) || 2;
+      canvas.width = LOGICAL_WIDTH * state.exportScale;
+      canvas.height = LOGICAL_HEIGHT * state.exportScale;
+    });
+
+    document.getElementById('simSpeedRange').addEventListener('input', (e) => {
+      state.simSpeed = parseFloat(e.target.value) || 1.0;
+      document.getElementById('simSpeedVal').textContent = `${state.simSpeed.toFixed(1)}x`;
+    });
+
+    document.getElementById('gravityRange').addEventListener('input', (e) => {
+      state.gravity = parseFloat(e.target.value) || 0;
+      document.getElementById('gravityVal').textContent = state.gravity.toFixed(2);
+    });
+
+    document.getElementById('barCountSelect').addEventListener('change', (e) => {
+      state.barCount = parseInt(e.target.value, 10) || 3;
+      renderHpBarInputs();
+      resetPositionsAndHp();
+    });
+
+    document.getElementById('watermarkInput').addEventListener('input', (e) => {
+      state.watermark = e.target.value;
+    });
+
+    document.getElementById('autoRecordToggle').addEventListener('change', (e) => {
+      state.autoRecord = e.target.checked;
+    });
+
+    document.getElementById('showStatsToggle').addEventListener('change', (e) => {
+      state.showStats = e.target.checked;
+    });
+
+    document.getElementById('showFloatTextToggle').addEventListener('change', (e) => {
+      state.showFloatText = e.target.checked;
+    });
+
+    btnStartStop.addEventListener('click', () => startOrToggleBattle(false));
+
+    // Arka Plan Müziği (BGM) Kontrolleri
+    document.getElementById('bgmStyleSelect').addEventListener('change', (e) => {
+      soundEngine.setBgmStyle(e.target.value);
+    });
+
+    document.getElementById('bgmVolRange').addEventListener('input', (e) => {
+      const pct = parseInt(e.target.value, 10) || 0;
+      document.getElementById('bgmVolVal').textContent = `${pct}%`;
+      soundEngine.setBgmVolume(pct / 100);
+    });
+
+    document.getElementById('btnBgmPreview').addEventListener('click', () => {
+      soundEngine.init();
+      if (soundEngine.bgmPlaying) {
+        soundEngine.stopBgm();
+      } else {
+        soundEngine.startBgm();
+      }
+    });
+
+    document.getElementById('bgmFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        await soundEngine.loadCustomBgm(file);
+        document.getElementById('bgmFileStatus').textContent = `Özel Müzik Aktif: ${file.name}`;
+      } catch (err) {
+        document.getElementById('bgmFileStatus').textContent = 'Müzik dosyası okunamadı, varsayılan BGM aktif';
+      }
+    });
+
+    document.getElementById('btnClearBgmFile').addEventListener('click', () => {
+      soundEngine.clearCustomBgm();
+      document.getElementById('bgmFileInput').value = '';
+      document.getElementById('bgmFileStatus').textContent = 'Varsayılan sentezlenmiş hafif atmosfer müziği aktif';
+    });
+
+    btnReset.addEventListener('click', () => {
+      state.status = 'idle';
+      state.winner = null;
+      soundEngine.stopBgm();
+      if (videoRecorder.isRecording) videoRecorder.stop();
+      resetPositionsAndHp();
+      updateControlButtons();
+    });
+
+    btnRecordToggle.addEventListener('click', () => {
+      if (videoRecorder.isRecording) {
+        videoRecorder.stop();
+      } else {
+        resetPositionsAndHp();
+        startOrToggleBattle(true);
+      }
+    });
+
+    btnDownloadVideo.addEventListener('click', () => {
+      videoRecorder.download(state.fighters[0].name, state.fighters[1].name);
+    });
+
+    canvas.addEventListener('click', () => {
+      startOrToggleBattle(false);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        startOrToggleBattle(false);
+      } else if (e.code === 'KeyR') {
+        e.preventDefault();
+        btnReset.click();
+      }
+    });
+
+    // ============================================================================
+    // 9. ANA OYUN DÖNGÜSÜ (60/120Hz Delta-Time Sabitlenmiş Yüksek Performanslı Loop)
+    // ============================================================================
+    let lastFrameTime = performance.now();
+    let frameCount = 0;
+    let fpsTimer = performance.now();
+
+    function mainLoop(now) {
+      const elapsedMs = now - lastFrameTime;
+      lastFrameTime = now;
+
+      let dtScale = Math.min(2.5, Math.max(0.1, elapsedMs / 16.6667));
+      if (state.slowMoTimer > 0) {
+        state.slowMoTimer = Math.max(0, state.slowMoTimer - 1);
+        dtScale *= 0.28;
+      }
+
+      stepPhysics(dtScale);
+      renderScene(dtScale);
+
+      frameCount++;
+      if (now - fpsTimer >= 500) {
+        const currentFps = Math.round((frameCount * 1000) / (now - fpsTimer));
+        fpsCounter.textContent = `${currentFps} FPS`;
+        frameCount = 0;
+        fpsTimer = now;
+      }
+
+      requestAnimationFrame(mainLoop);
+    }
+
+    requestAnimationFrame(mainLoop);
+  </script>
+</body>
+</html>
